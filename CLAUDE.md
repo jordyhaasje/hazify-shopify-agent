@@ -1,0 +1,20 @@
+# Claude Code Instructions
+
+This workspace is configured for Shopify work through Shopify AI Toolkit, Shopify Dev MCP, optional Shopify CLI MCP, and Shopify CLI.
+
+- Use Shopify AI Toolkit and Shopify Dev MCP as the source of truth.
+- Use `.mcp.json` for local MCP server configuration.
+- Use Shopify CLI directly when Shopify CLI MCP is not configured.
+- Do not duplicate Shopify docs in this repo.
+- Never ask for secrets in chat. Use `npm run setup` or `npm run auth` hidden prompts.
+- Do not ask for Shopify IDs first. Resolve products, customers, orders, collections, and pages from merchant-friendly identifiers.
+- Inspect the existing theme before creating or editing Liquid, CSS, JS, templates, locales, snippets, or blocks.
+- Run `npm run theme:check` before any push.
+- Do not push to a live theme unless the user explicitly approves live.
+- Summarize changed files and create a rollback note before deployment.
+
+Useful starts:
+
+- Read `prompts/create-section.md` before creating a new section.
+- Read `workflows/custom-app-auth.md` before Admin API auth work.
+- Read `workflows/safe-deployment.md` before pushing theme changes.

@@ -1,0 +1,43 @@
+{
+  "name": "hazify-shopify-agent",
+  "version": "0.1.0",
+  "description": "A secure local Shopify AI agent workspace for Codex, Claude Code, and OpenCode.",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "bin": {
+    "hazify-shopify-agent": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "setup": "tsx src/cli.ts setup",
+    "doctor": "tsx src/cli.ts doctor",
+    "auth": "tsx src/cli.ts auth",
+    "theme:list": "tsx src/cli.ts theme list",
+    "theme:pull": "tsx src/cli.ts theme pull",
+    "theme:check": "tsx src/cli.ts theme check",
+    "theme:dev": "tsx src/cli.ts theme dev"
+  },
+  "dependencies": {
+    "chalk": "latest",
+    "commander": "latest",
+    "execa": "latest",
+    "fs-extra": "latest",
+    "inquirer": "latest",
+    "open": "latest",
+    "ora": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "latest",
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  },
+  "optionalDependencies": {
+    "keytar": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

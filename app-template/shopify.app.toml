@@ -1,0 +1,19 @@
+# Template only. `npm run setup` updates scopes and store notes.
+name = "Hazify Shopify Agent"
+client_id = ""
+application_url = "http://127.0.0.1:3456"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_themes,write_themes"
+
+[auth]
+redirect_urls = [
+  "http://127.0.0.1:3456/callback"
+]
+
+[webhooks]
+api_version = "2026-07"
+
+[build]
+automatically_update_urls_on_dev = true
