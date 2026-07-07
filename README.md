@@ -40,9 +40,13 @@ npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
 
 This writes agent/client configs and `AGENT_SETUP.md` without blocking on prompts. Read `CODING_CLIENTS.md` for the full agent-first flow.
 
+If npm says it cannot read `package.json`, you are not inside the cloned repo yet. Run `cd hazify-shopify-agent` or open the folder that contains `package.json`.
+
 ## Authentication
 
 Shopify CLI login enables CLI workflows such as theme list, theme pull, theme dev, and app config validation. It is not the same thing as an Admin API access token.
+
+For Shopify CLI v4, use `shopify auth login` without a store flag, or let `shopify theme list --store example.myshopify.com` trigger login. Do not run `shopify auth login --store ...`; that flag does not exist.
 
 Admin API access uses one of three modes:
 

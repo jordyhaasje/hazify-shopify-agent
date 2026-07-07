@@ -28,6 +28,12 @@ npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
 
 Then ask the agent to read `AGENT_SETUP.md` and continue from there.
 
+If the agent cloned into a parent folder, make sure it runs commands from the actual repo:
+
+```bash
+cd hazify-shopify-agent
+```
+
 ## 3. Check Health
 
 ```bash

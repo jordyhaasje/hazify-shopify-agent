@@ -11,6 +11,36 @@ shopify version
 
 Use `shopify commands` and `shopify help <command>` to inspect current command behavior.
 
+## NPM Cannot Read package.json
+
+You are not in the cloned repository folder. If you cloned into a parent folder named `Shopify Agent`, the repo is probably nested:
+
+```bash
+cd hazify-shopify-agent
+```
+
+Then retry:
+
+```bash
+npm run doctor
+```
+
+## Shopify auth login --store Fails
+
+Shopify CLI v4 does not support `--store` on `shopify auth login`.
+
+Use:
+
+```bash
+shopify auth login
+```
+
+Then run the store-specific command:
+
+```bash
+shopify theme list --store <your-store>.myshopify.com
+```
+
 ## Store Access Fails
 
 Run:

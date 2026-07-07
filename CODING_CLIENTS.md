@@ -7,12 +7,14 @@ Hazify supports two setup styles.
 Use this inside Codex, Claude Code, OpenCode, or another coding agent that can run shell commands:
 
 ```bash
+test -f package.json || cd hazify-shopify-agent
 npm run setup:agent
 ```
 
 With a store:
 
 ```bash
+test -f package.json || cd hazify-shopify-agent
 npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
 ```
 
@@ -42,10 +44,31 @@ This mode can ask visible questions, use hidden prompts for secrets, and trigger
 Most coding agents have a terminal tool in their own UI. They can run commands such as:
 
 ```bash
+test -f package.json || cd hazify-shopify-agent
 npm run doctor
 npm run configure
 shopify theme list --store example.myshopify.com
 npm run theme:check
+```
+
+If npm reports `Could not read package.json`, the terminal is not in the cloned repo. Run:
+
+```bash
+cd hazify-shopify-agent
+```
+
+or open the folder that contains `package.json`.
+
+For Shopify CLI browser login, use:
+
+```bash
+shopify auth login
+```
+
+Do not add `--store` to `shopify auth login`. In Shopify CLI v4, store selection belongs on commands such as:
+
+```bash
+shopify theme list --store example.myshopify.com
 ```
 
 Agents should not collect secrets in chat. When a token, client secret, or OAuth credential is needed, use:

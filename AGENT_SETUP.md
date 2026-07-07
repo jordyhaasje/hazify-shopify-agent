@@ -4,6 +4,8 @@ This file is generated for coding agents running inside Codex, Claude Code, Open
 
 The agent should execute normal shell commands from its own terminal tool. Do not ask the merchant to copy commands into a separate terminal unless the coding client cannot run shell commands.
 
+Always run commands from the repository root, the folder that contains `package.json`. If npm fails with `Could not read package.json`, the terminal is one directory too high.
+
 ## Current Target
 
 - Store: `<your-store>.myshopify.com`
@@ -22,6 +24,8 @@ The agent should execute normal shell commands from its own terminal tool. Do no
 ## Recommended Agent Flow
 
 ```bash
+test -f package.json || cd hazify-shopify-agent
+test -f package.json || { echo "Run this from the hazify-shopify-agent folder"; exit 1; }
 npm install
 npm run doctor
 npm run configure
@@ -36,6 +40,8 @@ If Admin API access is needed:
 ```bash
 npm run auth
 ```
+
+For Shopify CLI browser login, run `shopify auth login` without a store flag, or let `shopify theme list --store <your-store>.myshopify.com` trigger the login flow. Do not run `shopify auth login --store`; Shopify CLI v4 does not support that flag.
 
 If the client is OpenCode, ensure `opencode.json` is loaded from the project root. OpenCode supports project config through `opencode.json` and MCP servers through the `mcp` option.
 
