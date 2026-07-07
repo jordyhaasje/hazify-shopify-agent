@@ -17,10 +17,16 @@ npm install -g @shopify/cli@latest
 ## 2. Run Setup
 
 ```bash
-npm run setup
+npm start
 ```
 
-You will choose AI clients, enter your `example.myshopify.com` store domain, select an Admin API connection mode, and choose a theme to pull into `./theme`.
+Use the launcher to choose what you want to do: set up the workspace, connect a theme, enable Shopify data-agent access, run doctor checks, or start theme development.
+
+The classic wizard is still available:
+
+```bash
+npm run setup
+```
 
 If you are running this from a coding agent UI, prefer:
 

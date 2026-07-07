@@ -5,6 +5,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { authCommand } from "./commands/auth.js";
 import { configureCommand } from "./commands/configure.js";
 import { themeCommand } from "./commands/theme.js";
+import { launchCommand } from "./commands/launch.js";
 import { logger } from "./lib/logger.js";
 
 const program = new Command();
@@ -14,6 +15,7 @@ program
   .description("Local Shopify AI agent workspace setup and operations CLI.")
   .version("0.1.0");
 
+program.command("launch").description("Open the interactive Hazify launcher.").action(launchCommand);
 program
   .command("setup")
   .description("Run the interactive setup wizard.")

@@ -25,18 +25,24 @@ It is not a Shopify documentation replacement, Admin API replacement, or hosted 
 
 ## Recommended Setup
 
-For most users with a coding agent, do not start by typing commands manually. Paste the prompt from `START_HERE.md` into the coding agent and include your store domain.
+For most users with a coding agent, do not start by typing separate commands manually. Paste the prompt from `START_HERE.md` into the coding agent and include your store domain.
 
-Manual setup is still supported:
+The coding agent should clone the repo, run `npm install`, and start the launcher:
 
 ```bash
 git clone https://github.com/<owner>/hazify-shopify-agent.git
 cd hazify-shopify-agent
 npm install
-npm run setup
+npm start
 ```
 
-Setup checks your local tools, configures selected AI clients, writes MCP configs, asks for your store domain, helps configure Admin API access, lists Shopify themes, pulls your chosen theme into `./theme`, and runs Theme Check.
+The launcher lets the user choose what they want to do: configure the workspace, connect a theme, enable Shopify data-agent access, run doctor checks, or start theme development.
+
+Manual guided setup is still supported:
+
+```bash
+npm run setup
+```
 
 For coding agents running inside Codex, Claude Code, OpenCode, or another agent UI, use the non-interactive setup:
 
@@ -89,6 +95,8 @@ The setup objective referenced a public Shopify CLI MCP package, but the listed 
 ## Daily Commands
 
 ```bash
+npm run launch
+npm start
 npm run doctor
 npm run configure
 npm run auth
@@ -104,6 +112,7 @@ The built package also exposes:
 
 ```bash
 hazify-shopify-agent setup
+hazify-shopify-agent launch
 hazify-shopify-agent doctor
 hazify-shopify-agent auth
 hazify-shopify-agent theme list

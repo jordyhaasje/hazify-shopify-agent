@@ -5,6 +5,8 @@ This workspace is configured for Shopify work through Shopify AI Toolkit, Shopif
 - Use Shopify AI Toolkit and Shopify Dev MCP as the source of truth.
 - Use `.mcp.json` for local MCP server configuration.
 - Use Shopify CLI directly when Shopify CLI MCP is not configured.
+- Prefer `npm run launch` for setup and connection tasks.
+- When the user asks to configure, connect, pull, or enable something, run the needed terminal command yourself when Claude Code has terminal access. Only pause for hidden secrets or browser approval.
 - Do not duplicate Shopify docs in this repo.
 - Never ask for secrets in chat. Use `npm run setup` or `npm run auth` hidden prompts.
 - Do not ask for Shopify IDs first. Resolve products, customers, orders, collections, and pages from merchant-friendly identifiers.

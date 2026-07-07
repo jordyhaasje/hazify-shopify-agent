@@ -7,6 +7,7 @@ Use this repository as a safe local Shopify agent workspace.
 - The generated `opencode.json` is an example MCP config. If OpenCode changes its MCP format, copy the same server definitions into the current OpenCode settings format.
 - If the OpenCode binary is not on `PATH`, continue anyway. Project config is still written to `opencode.json`.
 - Never ask the user to paste secrets into chat. Use hidden terminal prompts from `npm run setup` or `npm run auth`.
+- When the user asks to set up, connect, or enable something, run the needed terminal commands yourself. Prefer `npm run launch` for menu-driven setup. Do not only tell the user which command to run unless the command requires hidden human input or browser approval.
 - Resolve store resources by merchant-friendly values before asking for IDs.
 - Inspect the theme structure before editing sections.
 - Run Theme Check before pushing.

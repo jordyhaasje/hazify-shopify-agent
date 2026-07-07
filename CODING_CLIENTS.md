@@ -10,7 +10,7 @@ Use this inside Codex, Claude Code, OpenCode, or another coding agent that can r
 
 ```bash
 test -f package.json || cd hazify-shopify-agent
-npm run setup:agent
+npm run launch
 ```
 
 With a store:
@@ -53,6 +53,7 @@ Most coding agents have a terminal tool in their own UI. They can run commands s
 test -f package.json || cd hazify-shopify-agent
 npm run doctor
 npm run configure
+npm run launch
 npm run theme:list
 npm run theme:pull
 npm run theme:check
@@ -81,10 +82,10 @@ shopify theme list --store example.myshopify.com
 Agents should not collect secrets in chat. When a token, client secret, or OAuth credential is needed, use:
 
 ```bash
-npm run auth
+npm run launch
 ```
 
-That command uses hidden terminal prompts and secure local storage.
+Then choose "Enable Shopify data agent access". This uses hidden terminal prompts and secure local storage. If the coding client cannot interact with the launcher, run `npm run auth` directly.
 
 Browser login flows, Shopify account permissions, and app authorization may still require the human merchant to approve something in the browser.
 

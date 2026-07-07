@@ -49,7 +49,7 @@ export async function askStoreDomain(defaultValue?: string): Promise<string> {
 export async function askAuthMode(): Promise<AuthMode> {
   const answers = await inquirer.prompt<{ authMode: AuthMode }>([
     {
-      type: "list",
+      type: "select",
       name: "authMode",
       message: "How do you want to connect to Shopify Admin API?",
       choices: [

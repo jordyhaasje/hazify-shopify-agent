@@ -123,7 +123,7 @@ async function chooseAndPullTheme(storeDomain: string): Promise<{ id: string | n
   let selected: { id: string; name: string | null };
   if (choices.length) {
     const answer = await inquirer.prompt<{ theme: { id: string; name: string } }>([
-      { type: "list", name: "theme", message: "Choose a theme to pull into ./theme:", choices }
+      { type: "select", name: "theme", message: "Choose a theme to pull into ./theme:", choices }
     ]);
     selected = { id: answer.theme.id, name: answer.theme.name };
   } else {

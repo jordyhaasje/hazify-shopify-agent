@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import inquirer from "inquirer";
 import { readLocalConfig, upsertLocalConfig } from "../lib/filesystem.js";
 import { logger } from "../lib/logger.js";
 import { askStoreDomain, askThemeId } from "../lib/prompts.js";
@@ -33,9 +34,25 @@ export function themeCommand(): Command {
       let themeName: string | null = null;
       if (!themeId) {
         const listed = await listThemes(storeDomain);
-        const selected = await askThemeId(listed.raw);
-        themeId = selected.id;
-        themeName = selected.name;
+        if (listed.themes.length) {
+          const answer = await inquirer.prompt<{ theme: { id: string; name: string } }>([
+            {
+              type: "select",
+              name: "theme",
+              message: "Choose a theme to pull into ./theme:",
+              choices: listed.themes.map((theme) => ({
+                name: `${theme.name} (${theme.role ?? "unknown role"}, ${theme.id})`,
+                value: theme
+              }))
+            }
+          ]);
+          themeId = answer.theme.id;
+          themeName = answer.theme.name;
+        } else {
+          const selected = await askThemeId(listed.raw || listed.error);
+          themeId = selected.id;
+          themeName = selected.name;
+        }
       }
       const exitCode = await pullTheme(storeDomain, themeId, themePath);
       if (exitCode === 0) await upsertLocalConfig({ storeDomain, selectedThemeId: themeId, selectedThemeName: themeName });

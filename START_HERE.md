@@ -21,18 +21,19 @@ Please do everything from your terminal tools:
 1. Clone the repository.
 2. cd into the cloned hazify-shopify-agent folder.
 3. Run npm install.
-4. Run npm run setup:agent -- --store YOUR-STORE.myshopify.com --auth-mode theme-only.
-5. Read .hazify/agent-setup.md.
-6. Run npm run doctor.
-7. If Shopify CLI asks for browser login, pause and tell me exactly what to approve.
-8. Run npm run theme:list and show me the available themes by name and role.
-9. Ask me which theme I want to use: Live, Development, or an unpublished theme by name.
-10. Run npm run theme:pull and select that theme when prompted.
-11. Run npm run theme:check.
+4. Run npm start.
+5. In the launcher, set up the workspace for coding agents.
+6. Read .hazify/agent-setup.md.
+7. Run doctor checks from the launcher.
+8. Choose and pull a Shopify theme from the launcher.
+9. If Shopify CLI asks for browser login, pause and tell me exactly what to approve.
+10. Show me available themes by name and role.
+11. Ask me which theme I want to use: Live, Development, or an unpublished theme by name.
+12. Run Theme Check after pulling the theme.
 
 Do not ask me for theme IDs unless the theme list cannot be parsed.
 Do not ask me to paste tokens or secrets in chat.
-Use npm run auth only if Admin API access is needed.
+Use the launcher's "Enable Shopify data agent access" option only if Admin API access is needed.
 Never push to the live theme unless I explicitly approve live deployment.
 ```
 
@@ -71,5 +72,5 @@ Agent setup:
 git clone https://github.com/jordyhaasje/hazify-shopify-agent.git
 cd hazify-shopify-agent
 npm install
-npm run setup:agent -- --store YOUR-STORE.myshopify.com --auth-mode theme-only
+npm start
 ```

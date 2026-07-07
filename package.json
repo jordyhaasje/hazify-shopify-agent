@@ -9,7 +9,9 @@
     "hazify-shopify-agent": "./dist/cli.js"
   },
   "scripts": {
+    "start": "tsx src/cli.ts launch",
     "build": "tsc",
+    "launch": "tsx src/cli.ts launch",
     "setup": "tsx src/cli.ts setup",
     "setup:agent": "tsx src/cli.ts setup --agent --clients all",
     "doctor": "tsx src/cli.ts doctor",

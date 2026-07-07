@@ -8,6 +8,7 @@ Use this repository as a local Shopify AI agent workspace. Do not treat it as a 
 - Use Shopify Dev MCP for current Shopify docs, schemas, Liquid validation, and API validation.
 - Use Shopify CLI MCP when it is configured and working. Otherwise use Shopify CLI directly for theme and store command workflows.
 - Discover current Shopify CLI command behavior with `shopify commands` and `shopify help <command>` when uncertain.
+- For setup, prefer `npm run launch`. If the user asks you to configure, connect, pull, or enable something, run the terminal command yourself when your coding client has terminal access.
 
 ## Secrets
 
