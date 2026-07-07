@@ -1,5 +1,7 @@
 # Getting Started
 
+If you are using Codex, Claude Code, OpenCode, Cursor, or another coding agent, start with `START_HERE.md` and paste that prompt into the agent.
+
 ## 1. Install
 
 ```bash

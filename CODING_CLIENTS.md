@@ -2,6 +2,8 @@
 
 Hazify supports two setup styles.
 
+If the repository is not cloned yet, use the copy/paste prompt in `START_HERE.md`.
+
 ## Agent-first setup
 
 Use this inside Codex, Claude Code, OpenCode, or another coding agent that can run shell commands:
@@ -27,7 +29,9 @@ This mode does not open interactive prompts. It writes:
 - `.hazify/config.local.json`
 - `.hazify/app/shopify.app.toml` when a store is provided
 
-The coding agent can then read `.hazify/agent-setup.md`, run `npm run doctor`, install Shopify CLI if needed, list themes, pull the selected theme, and run Theme Check.
+The coding agent can then read `.hazify/agent-setup.md`, run `npm run doctor`, install Shopify CLI if needed, list themes, ask the user to choose by name/role, pull the selected theme, and run Theme Check.
+
+The user should not need a theme ID. Theme IDs are only a fallback when Shopify CLI output cannot be parsed.
 
 The generated files are ignored by Git where they contain local store-specific state. This prevents Shopify CLI from warning about installer-created uncommitted changes before `theme pull`.
 
@@ -49,7 +53,8 @@ Most coding agents have a terminal tool in their own UI. They can run commands s
 test -f package.json || cd hazify-shopify-agent
 npm run doctor
 npm run configure
-shopify theme list --store example.myshopify.com
+npm run theme:list
+npm run theme:pull
 npm run theme:check
 ```
 

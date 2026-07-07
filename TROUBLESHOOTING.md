@@ -57,8 +57,10 @@ Run:
 
 ```bash
 npm run theme:list
-npm run theme:pull -- --theme <theme-id>
+npm run theme:pull
 ```
+
+The normal flow does not require the user to know a theme ID. Choose by theme name or role when Shopify CLI prompts.
 
 If automatic parsing fails, enter the theme ID manually from Shopify CLI output. You can paste IDs with or without `#`; Hazify normalizes `#189445996858` to `189445996858`.
 

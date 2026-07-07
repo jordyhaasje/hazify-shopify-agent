@@ -2,6 +2,8 @@
 
 Hazify Shopify Agent is a local workspace for Shopify AI agents. Clone it, run setup, and use Codex, Claude Code, or OpenCode with Shopify AI Toolkit, Shopify Dev MCP, Shopify CLI MCP, and Shopify CLI.
 
+If you are starting from zero with a coding agent, read `START_HERE.md` first. The shortest path is to paste the prompt from that file into Codex, Claude Code, OpenCode, or another coding agent.
+
 It helps with:
 
 - Shopify store data operations.
@@ -22,6 +24,10 @@ It is not a Shopify documentation replacement, Admin API replacement, or hosted 
 - Codex, Claude Code, OpenCode, or any combination of them.
 
 ## Recommended Setup
+
+For most users with a coding agent, do not start by typing commands manually. Paste the prompt from `START_HERE.md` into the coding agent and include your store domain.
+
+Manual setup is still supported:
 
 ```bash
 git clone https://github.com/<owner>/hazify-shopify-agent.git
@@ -91,6 +97,8 @@ npm run theme:pull
 npm run theme:check
 npm run theme:dev
 ```
+
+Users do not need to know theme IDs. Run `npm run theme:list`, choose by theme name/role, then run `npm run theme:pull`. Theme IDs are only a fallback.
 
 The built package also exposes:
 

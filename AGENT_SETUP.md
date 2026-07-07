@@ -38,10 +38,12 @@ npm install
 npm run doctor
 npm run configure
 shopify version || npm install -g @shopify/cli@latest
-shopify theme list --store <your-store>.myshopify.com
+npm run theme:list
 npm run theme:pull
 npm run theme:check
 ```
+
+The user should not need a theme ID. Show available themes by name and role, then ask the user which theme to pull. Use a theme ID only if Shopify CLI output cannot be parsed.
 
 If Admin API access is needed:
 
