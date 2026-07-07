@@ -23,11 +23,13 @@ This mode does not open interactive prompts. It writes:
 - `.codex/config.toml`
 - `.mcp.json`
 - `opencode.json`
-- `AGENT_SETUP.md`
+- `.hazify/agent-setup.md`
 - `.hazify/config.local.json`
-- `app-template/shopify.app.toml` when a store is provided
+- `.hazify/app/shopify.app.toml` when a store is provided
 
-The coding agent can then read `AGENT_SETUP.md`, run `npm run doctor`, install Shopify CLI if needed, list themes, pull the selected theme, and run Theme Check.
+The coding agent can then read `.hazify/agent-setup.md`, run `npm run doctor`, install Shopify CLI if needed, list themes, pull the selected theme, and run Theme Check.
+
+The generated files are ignored by Git where they contain local store-specific state. This prevents Shopify CLI from warning about installer-created uncommitted changes before `theme pull`.
 
 ## Human guided setup
 
@@ -80,6 +82,15 @@ npm run auth
 That command uses hidden terminal prompts and secure local storage.
 
 Browser login flows, Shopify account permissions, and app authorization may still require the human merchant to approve something in the browser.
+
+Coding agents should treat browser auth as a checkpoint:
+
+1. Start the Shopify CLI command.
+2. Tell the user to complete browser login or copy/paste the shown code.
+3. Wait for the command to finish or ask the user to confirm completion.
+4. Verify with `shopify theme list --store example.myshopify.com`.
+
+If the default browser fails because another browser instance is already open, copy the login URL/code from the terminal and finish the login in any browser. Then return to the coding client and rerun the verification command.
 
 ## OpenCode notes
 

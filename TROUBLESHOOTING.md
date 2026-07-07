@@ -57,10 +57,12 @@ Run:
 
 ```bash
 npm run theme:list
-npm run theme:pull
+npm run theme:pull -- --theme <theme-id>
 ```
 
-If automatic parsing fails, enter the theme ID manually from Shopify CLI output.
+If automatic parsing fails, enter the theme ID manually from Shopify CLI output. You can paste IDs with or without `#`; Hazify normalizes `#189445996858` to `189445996858`.
+
+The first pull into an empty `./theme` folder can show a Shopify CLI warning that the folder does not look like a theme directory. Confirming is expected when you are pulling the remote theme for the first time.
 
 ## Admin API Credentials Missing
 

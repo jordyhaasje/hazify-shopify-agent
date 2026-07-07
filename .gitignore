@@ -6,6 +6,8 @@ dist/
 .env.local
 
 .hazify/config.local.json
+.hazify/agent-setup.md
+.hazify/app/
 .hazify/credentials*
 .hazify/tokens*
 .hazify/logs/

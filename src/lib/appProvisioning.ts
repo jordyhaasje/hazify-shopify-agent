@@ -3,6 +3,7 @@ import path from "node:path";
 import { runShopify, runShopifyInteractive } from "./shopifyCli.js";
 import { fromRoot } from "./filesystem.js";
 import { logger } from "./logger.js";
+import { localAppConfigPath } from "./paths.js";
 
 export async function ensureShopifyCliLogin(storeDomain: string): Promise<boolean> {
   const check = await runShopify(["theme", "list", "--store", storeDomain]);
@@ -19,7 +20,7 @@ export async function createOrLinkShopifyApp(): Promise<boolean> {
 }
 
 export async function writeShopifyAppConfig(storeDomain: string, scopes: string[]): Promise<string> {
-  const filePath = fromRoot("app-template", "shopify.app.toml");
+  const filePath = localAppConfigPath;
   const content = `# Local Shopify app config template for Hazify Shopify Agent.
 # Shopify CLI login enables CLI operations. Admin API store data requires an app/token auth flow.
 
@@ -49,7 +50,7 @@ automatically_update_urls_on_dev = true
   return filePath;
 }
 
-export async function checkAppConfig(appPath = fromRoot("app-template")): Promise<boolean> {
+export async function checkAppConfig(appPath = fromRoot(".hazify", "app")): Promise<boolean> {
   const result = await runShopify(["app", "config", "validate", "--path", appPath, "--json"]);
   if (result.ok) return true;
   logger.warn("Shopify CLI could not validate the app template automatically.");

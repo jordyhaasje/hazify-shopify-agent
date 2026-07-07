@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
 import type { AiClient, AuthMode } from "./filesystem.js";
+import { normalizeThemeReference } from "./themeWorkspace.js";
 import { validateStoreDomain } from "./validation.js";
 
 export async function selectAiClients(detected: {
@@ -8,9 +9,9 @@ export async function selectAiClients(detected: {
   opencodeInstalled: boolean;
 }): Promise<AiClient[]> {
   const choices = [
-    { name: `Codex${detected.codexInstalled ? "" : " (not detected)"}`, value: "codex" },
-    { name: `Claude Code${detected.claudeInstalled ? "" : " (not detected)"}`, value: "claude" },
-    { name: `OpenCode${detected.opencodeInstalled ? "" : " (not detected)"}`, value: "opencode" }
+    { name: `Codex${detected.codexInstalled ? "" : " (CLI not on PATH; config only)"}`, value: "codex" },
+    { name: `Claude Code${detected.claudeInstalled ? "" : " (CLI not on PATH; config only)"}`, value: "claude" },
+    { name: `OpenCode${detected.opencodeInstalled ? "" : " (CLI not on PATH; config only)"}`, value: "opencode" }
   ];
   const answers = await inquirer.prompt<{ clients: AiClient[] }>([
     {
@@ -94,7 +95,7 @@ export async function askThemeId(rawOutput?: string): Promise<{ id: string; name
       name: "id",
       message: "Enter the theme ID to pull into ./theme:",
       validate(value: string) {
-        return value.trim().length > 0 || "Theme ID is required.";
+        return normalizeThemeReference(value).length > 0 || "Theme ID is required.";
       }
     },
     {
@@ -104,5 +105,5 @@ export async function askThemeId(rawOutput?: string): Promise<{ id: string; name
       default: ""
     }
   ]);
-  return { id: answers.id.trim(), name: answers.name.trim() || null };
+  return { id: normalizeThemeReference(answers.id), name: answers.name.trim() || null };
 }

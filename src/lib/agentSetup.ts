@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import { fromRoot, type AiClient, type AuthMode } from "./filesystem.js";
 import { writeMcpConfigs } from "./mcpConfig.js";
-import { themePath, toDisplayPath } from "./paths.js";
+import { localAgentSetupPath, themePath, toDisplayPath } from "./paths.js";
 import { SCOPE_GROUPS } from "./scopes.js";
 import { writeShopifyAppConfig } from "./appProvisioning.js";
 
@@ -20,11 +20,11 @@ export async function writeAgentSetupGuide(options: AgentSetupOptions): Promise<
   await fs.ensureDir(themePath);
   await fs.ensureFile(fromRoot("theme", ".gitkeep"));
 
-  const guidePath = fromRoot("AGENT_SETUP.md");
+  const guidePath = localAgentSetupPath;
   const store = options.storeDomain ?? "<your-store>.myshopify.com";
   const content = `# Agent Setup Plan
 
-This file is generated for coding agents running inside Codex, Claude Code, OpenCode, or another agent UI.
+This local file is generated for coding agents running inside Codex, Claude Code, OpenCode, or another agent UI.
 
 The agent should execute normal shell commands from its own terminal tool. Do not ask the merchant to copy commands into a separate terminal unless the coding client cannot run shell commands.
 
@@ -66,6 +66,8 @@ npm run auth
 \`\`\`
 
 For Shopify CLI browser login, run \`shopify auth login\` without a store flag, or let \`shopify theme list --store ${store}\` trigger the login flow. Do not run \`shopify auth login --store\`; Shopify CLI v4 does not support that flag.
+
+If a browser is already open and the Shopify login flow fails to launch cleanly, copy the login URL or code from the terminal, finish the login in any browser, return to the coding client, and rerun \`shopify theme list --store ${store}\`. The agent should wait for human confirmation before continuing.
 
 If the client is OpenCode, ensure \`opencode.json\` is loaded from the project root. OpenCode supports project config through \`opencode.json\` and MCP servers through the \`mcp\` option.
 

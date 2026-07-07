@@ -26,7 +26,7 @@ If you are running this from a coding agent UI, prefer:
 npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
 ```
 
-Then ask the agent to read `AGENT_SETUP.md` and continue from there.
+Then ask the agent to read `.hazify/agent-setup.md` and continue from there.
 
 If the agent cloned into a parent folder, make sure it runs commands from the actual repo:
 

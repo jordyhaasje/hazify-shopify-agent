@@ -1,6 +1,14 @@
-# Agent Setup Plan
+# Agent Setup Plan Template
 
-This file is generated for coding agents running inside Codex, Claude Code, OpenCode, or another agent UI.
+This is the generic tracked template for coding agents running inside Codex, Claude Code, OpenCode, or another agent UI.
+
+After `npm run setup:agent`, read the local generated plan at:
+
+```bash
+.hazify/agent-setup.md
+```
+
+That local file contains the selected store domain and auth mode. It is intentionally gitignored so setup does not dirty the repository.
 
 The agent should execute normal shell commands from its own terminal tool. Do not ask the merchant to copy commands into a separate terminal unless the coding client cannot run shell commands.
 

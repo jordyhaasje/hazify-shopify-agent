@@ -14,6 +14,7 @@ function check(ok: boolean, pass: string, fail: string): void {
 export async function doctorCommand(): Promise<void> {
   logger.title("Hazify Shopify Agent Doctor");
   const detection = await detectEnvironment();
+  const config = await readLocalConfig();
   check(isNodeVersionSupported(detection.nodeVersion), `Node.js ${detection.nodeVersion}`, `Node.js ${detection.nodeVersion} detected. Use Node.js 18+.`);
   check(Boolean(detection.npmVersion), `npm ${detection.npmVersion}`, "npm not found.");
 
@@ -21,13 +22,17 @@ export async function doctorCommand(): Promise<void> {
   const shopifyVersion = shopifyInstalled ? await getShopifyCliVersion() : null;
   check(shopifyInstalled, `Shopify CLI installed${shopifyVersion ? `: ${shopifyVersion}` : ""}`, "Shopify CLI not installed. Run: npm install -g @shopify/cli@latest");
 
-  check(detection.codexInstalled, "Codex detected", "Codex not detected.");
-  check(detection.claudeInstalled, "Claude Code detected", "Claude Code not detected.");
-  check(detection.opencodeInstalled, "OpenCode detected", "OpenCode not detected.");
+  reportClient("Codex", detection.codexInstalled, config?.configuredClients.includes("codex") ?? false);
+  reportClient("Claude Code", detection.claudeInstalled, config?.configuredClients.includes("claude") ?? false);
+  reportClient("OpenCode", detection.opencodeInstalled, config?.configuredClients.includes("opencode") ?? false);
 
-  const config = await readLocalConfig();
   check(Boolean(config?.storeDomain), `Store configured: ${config?.storeDomain}`, "Store domain not configured. Run: npm run setup");
   check(await fs.pathExists(themePath), "Theme directory exists: ./theme", "Theme directory missing.");
+  if (await fs.pathExists(themePath)) {
+    const hasThemeFiles = (await fs.pathExists(`${themePath}/config/settings_schema.json`)) || (await fs.pathExists(`${themePath}/sections`));
+    if (hasThemeFiles) logger.success("Theme files appear to be pulled.");
+    else logger.warn("Theme directory exists but no Shopify theme files were found yet. Run: npm run theme:pull");
+  }
   check(await fs.pathExists(codexConfigPath), "Codex config exists", "Codex config missing.");
   check(await fs.pathExists(claudeMcpPath), "Claude MCP config exists", "Claude MCP config missing.");
   check(await fs.pathExists(opencodeConfigPath), "OpenCode MCP config exists", "OpenCode MCP config missing.");
@@ -50,4 +55,16 @@ export async function doctorCommand(): Promise<void> {
     const themeCheck = await runShopify(["theme", "check", "--path", themePath]);
     check(themeCheck.ok, "Theme Check command works", "Theme Check did not complete. It may need a pulled theme or updated Shopify CLI.");
   }
+}
+
+function reportClient(name: string, installed: boolean, configured: boolean): void {
+  if (installed) {
+    logger.success(`${name} CLI detected`);
+    return;
+  }
+  if (configured) {
+    logger.info(`${name} config generated; CLI executable not found in this shell. This is OK for desktop apps or clients not on PATH.`);
+    return;
+  }
+  logger.warn(`${name} not detected or configured.`);
 }
