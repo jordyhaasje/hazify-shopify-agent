@@ -20,6 +20,14 @@ npm run setup
 
 You will choose AI clients, enter your `example.myshopify.com` store domain, select an Admin API connection mode, and choose a theme to pull into `./theme`.
 
+If you are running this from a coding agent UI, prefer:
+
+```bash
+npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
+```
+
+Then ask the agent to read `AGENT_SETUP.md` and continue from there.
+
 ## 3. Check Health
 
 ```bash

@@ -11,7 +11,9 @@
   "scripts": {
     "build": "tsc",
     "setup": "tsx src/cli.ts setup",
+    "setup:agent": "tsx src/cli.ts setup --agent --clients all",
     "doctor": "tsx src/cli.ts doctor",
+    "configure": "tsx src/cli.ts configure",
     "auth": "tsx src/cli.ts auth",
     "theme:list": "tsx src/cli.ts theme list",
     "theme:pull": "tsx src/cli.ts theme pull",

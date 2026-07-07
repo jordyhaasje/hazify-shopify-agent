@@ -32,6 +32,14 @@ npm run setup
 
 Setup checks your local tools, configures selected AI clients, writes MCP configs, asks for your store domain, helps configure Admin API access, lists Shopify themes, pulls your chosen theme into `./theme`, and runs Theme Check.
 
+For coding agents running inside Codex, Claude Code, OpenCode, or another agent UI, use the non-interactive setup:
+
+```bash
+npm run setup:agent -- --store example.myshopify.com --auth-mode theme-only
+```
+
+This writes agent/client configs and `AGENT_SETUP.md` without blocking on prompts. Read `CODING_CLIENTS.md` for the full agent-first flow.
+
 ## Authentication
 
 Shopify CLI login enables CLI workflows such as theme list, theme pull, theme dev, and app config validation. It is not the same thing as an Admin API access token.
@@ -70,6 +78,7 @@ The setup objective referenced a public Shopify CLI MCP package, but the listed 
 
 ```bash
 npm run doctor
+npm run configure
 npm run auth
 npm run theme:list
 npm run theme:pull

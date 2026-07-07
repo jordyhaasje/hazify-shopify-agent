@@ -14,7 +14,14 @@ program
   .description("Local Shopify AI agent workspace setup and operations CLI.")
   .version("0.1.0");
 
-program.command("setup").description("Run the interactive setup wizard.").action(setupCommand);
+program
+  .command("setup")
+  .description("Run the interactive setup wizard.")
+  .option("--agent", "Generate agent-ready configs and setup guide without interactive prompts.")
+  .option("--clients <clients>", "Comma-separated clients: codex,claude,opencode, or all.", "all")
+  .option("--store <store>", "Shopify store domain, for example example.myshopify.com.")
+  .option("--auth-mode <mode>", "Auth mode: shopify-cli-oauth, admin-api-token, or theme-only.")
+  .action(setupCommand);
 program.command("doctor").description("Check local workspace health.").action(doctorCommand);
 program.command("auth").description("Configure or refresh Admin API authentication.").action(authCommand);
 program.command("configure").description("Regenerate local agent and MCP configuration.").action(configureCommand);

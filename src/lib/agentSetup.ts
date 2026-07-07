@@ -1,0 +1,76 @@
+import fs from "fs-extra";
+import { fromRoot, type AiClient, type AuthMode } from "./filesystem.js";
+import { writeMcpConfigs } from "./mcpConfig.js";
+import { themePath, toDisplayPath } from "./paths.js";
+import { SCOPE_GROUPS } from "./scopes.js";
+import { writeShopifyAppConfig } from "./appProvisioning.js";
+
+export interface AgentSetupOptions {
+  clients: AiClient[];
+  storeDomain?: string;
+  authMode: AuthMode;
+}
+
+export async function writeAgentSetupGuide(options: AgentSetupOptions): Promise<string> {
+  await writeMcpConfigs(options.clients);
+  const scopes = [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metafields];
+  if (options.storeDomain) {
+    await writeShopifyAppConfig(options.storeDomain, scopes);
+  }
+  await fs.ensureDir(themePath);
+  await fs.ensureFile(fromRoot("theme", ".gitkeep"));
+
+  const guidePath = fromRoot("AGENT_SETUP.md");
+  const store = options.storeDomain ?? "<your-store>.myshopify.com";
+  const content = `# Agent Setup Plan
+
+This file is generated for coding agents running inside Codex, Claude Code, OpenCode, or another agent UI.
+
+The agent should execute normal shell commands from its own terminal tool. Do not ask the merchant to copy commands into a separate terminal unless the coding client cannot run shell commands.
+
+## Current Target
+
+- Store: \`${store}\`
+- Auth mode: \`${options.authMode}\`
+- AI clients: ${options.clients.map((client) => `\`${client}\``).join(", ")}
+- Theme path: \`${toDisplayPath(themePath)}\`
+
+## Agent Rules
+
+1. Run checks and write config files directly.
+2. Never ask for tokens or client secrets in chat.
+3. Use \`npm run auth\` for hidden credential prompts.
+4. Use Shopify CLI for browser login and theme operations.
+5. Stop before live theme pushes unless the merchant explicitly approves live.
+
+## Recommended Agent Flow
+
+\`\`\`bash
+npm install
+npm run doctor
+npm run configure
+shopify version || npm install -g @shopify/cli@latest
+shopify theme list --store ${store}
+npm run theme:pull
+npm run theme:check
+\`\`\`
+
+If Admin API access is needed:
+
+\`\`\`bash
+npm run auth
+\`\`\`
+
+If the client is OpenCode, ensure \`opencode.json\` is loaded from the project root. OpenCode supports project config through \`opencode.json\` and MCP servers through the \`mcp\` option.
+
+## Human-Friendly Setup
+
+For a classic guided installer, run:
+
+\`\`\`bash
+npm run setup
+\`\`\`
+`;
+  await fs.writeFile(guidePath, content, "utf8");
+  return guidePath;
+}

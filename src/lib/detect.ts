@@ -9,6 +9,7 @@ export interface DetectionReport {
   codexInstalled: boolean;
   claudeInstalled: boolean;
   opencodeInstalled: boolean;
+  activeClient: "codex" | "claude" | "opencode" | "terminal" | "unknown";
 }
 
 export async function detectEnvironment(): Promise<DetectionReport> {
@@ -26,11 +27,26 @@ export async function detectEnvironment(): Promise<DetectionReport> {
     arch: os.arch(),
     codexInstalled,
     claudeInstalled,
-    opencodeInstalled
+    opencodeInstalled,
+    activeClient: detectActiveClient()
   };
 }
 
 export function isNodeVersionSupported(version = process.version): boolean {
   const major = Number(version.replace(/^v/, "").split(".")[0]);
   return Number.isFinite(major) && major >= 18;
+}
+
+export function detectActiveClient(): DetectionReport["activeClient"] {
+  const env = process.env;
+  const joined = Object.entries(env)
+    .filter(([key]) => /CODEX|CLAUDE|OPENCODE|OPEN_CODE/i.test(key))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("\n");
+
+  if (/CODEX/i.test(joined)) return "codex";
+  if (/CLAUDE/i.test(joined)) return "claude";
+  if (/OPENCODE|OPEN_CODE/i.test(joined)) return "opencode";
+  if (process.env.TERM_PROGRAM || process.env.TERM) return "terminal";
+  return "unknown";
 }

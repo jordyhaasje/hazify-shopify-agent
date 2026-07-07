@@ -58,7 +58,15 @@ export function opencodeJson(): string {
       enabled: true
     };
   }
-  return JSON.stringify({ mcp }, null, 2);
+  return JSON.stringify(
+    {
+      "$schema": "https://opencode.ai/config.json",
+      instructions: ["AGENTS.md", "OPENCODE.md"],
+      mcp
+    },
+    null,
+    2
+  );
 }
 
 export async function writeMcpConfigs(clients: AiClient[]): Promise<void> {

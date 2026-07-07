@@ -9,11 +9,35 @@ import { askAuthMode, askConfirm, askHidden, askStoreDomain, askThemeId, selectA
 import { storeSecret } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
-import { CAPABILITY_SCOPES, DEFAULT_CAPABILITIES, type CapabilityName, uniqueScopes } from "../lib/scopes.js";
+import { CAPABILITY_SCOPES, DEFAULT_CAPABILITIES, SCOPE_GROUPS, type CapabilityName, uniqueScopes } from "../lib/scopes.js";
 import { ensureShopifyCliLogin, createOrLinkShopifyApp, writeShopifyAppConfig, checkAppConfig, explainManualFallback } from "../lib/appProvisioning.js";
 import { listThemes, pullTheme, runThemeCheck } from "../lib/themeWorkspace.js";
 import { runLocalOAuth } from "../lib/oauth.js";
 import { themePath } from "../lib/paths.js";
+import { writeAgentSetupGuide } from "../lib/agentSetup.js";
+import type { AiClient, AuthMode } from "../lib/filesystem.js";
+
+interface SetupOptions {
+  agent?: boolean;
+  clients?: string;
+  store?: string;
+  authMode?: AuthMode;
+}
+
+function parseClients(value?: string): AiClient[] {
+  if (!value || value === "all") return ["codex", "claude", "opencode"];
+  const clients = value.split(",").map((client) => client.trim().toLowerCase());
+  const valid = new Set(["codex", "claude", "opencode"]);
+  const invalid = clients.filter((client) => !valid.has(client));
+  if (invalid.length) throw new Error(`Unsupported AI client(s): ${invalid.join(", ")}`);
+  return clients as AiClient[];
+}
+
+function parseAuthMode(value?: AuthMode): AuthMode {
+  if (!value) return "theme-only";
+  if (["shopify-cli-oauth", "admin-api-token", "theme-only"].includes(value)) return value;
+  throw new Error(`Unsupported auth mode: ${value}`);
+}
 
 async function maybeInstallAiToolkits(clients: string[]): Promise<void> {
   if (clients.includes("codex")) {
@@ -31,6 +55,10 @@ async function maybeInstallAiToolkits(clients: string[]): Promise<void> {
     } else {
       logger.info("Run later: claude plugin install shopify-ai-toolkit@claude-plugins-official");
     }
+  }
+  if (clients.includes("opencode")) {
+    logger.step("OpenCode Shopify configuration");
+    logger.info("OpenCode uses project config. Setup writes opencode.json with Shopify Dev MCP and local instructions.");
   }
 }
 
@@ -106,7 +134,7 @@ async function chooseAndPullTheme(storeDomain: string): Promise<{ id: string | n
   return exitCode === 0 ? selected : { id: null, name: null };
 }
 
-export async function setupCommand(): Promise<void> {
+export async function setupCommand(options: SetupOptions = {}): Promise<void> {
   logger.title("Hazify Shopify Agent Setup");
   await ensureWorkspaceDirs();
   const detection = await detectEnvironment();
@@ -117,6 +145,32 @@ export async function setupCommand(): Promise<void> {
   logger.success(`Node.js ${detection.nodeVersion}`);
   logger.success(`npm ${detection.npmVersion ?? "not found"}`);
   logger.info(`OS: ${detection.platform} ${detection.arch}`);
+  logger.info(`Active shell/client: ${detection.activeClient}`);
+
+  if (options.agent) {
+    const clients = parseClients(options.clients);
+    const authMode = parseAuthMode(options.authMode);
+    const guidePath = await writeAgentSetupGuide({
+      clients,
+      storeDomain: options.store,
+      authMode
+    });
+    await upsertLocalConfig({
+      storeDomain: options.store ?? "",
+      themePath: "./theme",
+      selectedThemeId: null,
+      selectedThemeName: null,
+      configuredClients: clients,
+      authMode,
+      scopes: authMode === "theme-only" ? [] : [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metafields]
+    });
+
+    logger.success("Agent-ready configs generated without interactive prompts.");
+    logger.info(`Next instructions: ${guidePath}`);
+    logger.info("Run inside the coding client: npm run doctor");
+    if (!options.store) logger.warn("No store was provided. Re-run with --store <store>.myshopify.com or use npm run setup for guided setup.");
+    return;
+  }
 
   const clients = await selectAiClients(detection);
   await maybeInstallAiToolkits(clients);
