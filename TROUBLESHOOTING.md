@@ -66,15 +66,20 @@ If automatic parsing fails, enter the theme ID manually from Shopify CLI output.
 
 The first pull into an empty `./theme` folder can show a Shopify CLI warning that the folder does not look like a theme directory. Confirming is expected when you are pulling the remote theme for the first time.
 
-## Admin API Credentials Missing
+## Data-Agent Access Missing
 
 Run:
 
 ```bash
-npm run auth
+npm run data:connect
+npm run data:verify
 ```
 
-Choose existing token mode if app provisioning or OAuth is not ready. Paste the token only into the hidden terminal prompt.
+This uses Shopify CLI `store auth` and verifies with `store execute`.
+
+For order-management features, include the `Order management` capability. Older orders may require the extra `read_all_orders` scope, which can require additional Shopify approval.
+
+If `store execute` says auth is missing or expired, rerun `npm run data:connect`.
 
 ## Keychain Storage Unavailable
 

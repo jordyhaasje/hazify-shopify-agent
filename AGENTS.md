@@ -9,11 +9,12 @@ Use this repository as a local Shopify AI agent workspace. Do not treat it as a 
 - Use Shopify CLI MCP when it is configured and working. Otherwise use Shopify CLI directly for theme and store command workflows.
 - Discover current Shopify CLI command behavior with `shopify commands` and `shopify help <command>` when uncertain.
 - For setup, prefer `npm run launch`. If the user asks you to configure, connect, pull, or enable something, run the terminal command yourself when your coding client has terminal access.
+- For Shopify data-agent operations beyond themes, use `npm run launch` and choose "Enable Shopify data agent access", or run `npm run data:connect` and `npm run data:verify`.
 
 ## Secrets
 
 - Never ask the user to paste tokens, client secrets, or private keys into chat.
-- Use `npm run auth` or `npm run setup` hidden terminal prompts for secrets.
+- Use `npm run data:connect` for Shopify CLI store auth. Use `npm run auth:advanced` only for advanced token/OAuth fallback.
 - Never print full tokens. Mask secrets in logs and summaries.
 - Never commit `.env`, `.hazify/config.local.json`, `.hazify/credentials*`, or `.hazify/tokens*`.
 

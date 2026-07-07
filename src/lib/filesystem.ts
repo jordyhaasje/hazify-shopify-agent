@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import path from "node:path";
 import { hazifyDir, localConfigPath, repoRoot, themePath } from "./paths.js";
 
-export type AuthMode = "shopify-cli-oauth" | "admin-api-token" | "theme-only";
+export type AuthMode = "shopify-store-auth" | "shopify-cli-oauth" | "admin-api-token" | "theme-only";
 export type AiClient = "codex" | "claude" | "opencode";
 
 export interface LocalConfig {

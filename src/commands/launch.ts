@@ -8,12 +8,15 @@ import { logger } from "../lib/logger.js";
 import { askConfirm, askStoreDomain, askThemeId } from "../lib/prompts.js";
 import { themePath } from "../lib/paths.js";
 import { listThemes, pullTheme, runThemeCheck, startThemeDev } from "../lib/themeWorkspace.js";
+import { verifyStoreData } from "../lib/storeData.js";
 
 type LaunchAction =
+  | "quick-start"
   | "agent-setup"
   | "guided-setup"
   | "theme"
   | "data-agent"
+  | "data-verify"
   | "doctor"
   | "configure"
   | "theme-dev"
@@ -80,6 +83,16 @@ async function agentSetupFromLauncher(): Promise<void> {
   });
 }
 
+async function quickStart(): Promise<void> {
+  await agentSetupFromLauncher();
+  await doctorCommand();
+  await connectTheme();
+  const wantsData = await askConfirm("Do you also want product/order/customer/inventory data-agent access?", false);
+  if (wantsData) {
+    await authCommand({ dataAgent: true });
+  }
+}
+
 export async function launchCommand(): Promise<void> {
   logger.title("Hazify Shopify Agent Launcher");
   let running = true;
@@ -91,10 +104,12 @@ export async function launchCommand(): Promise<void> {
         name: "action",
         message: "What do you want to do?",
         choices: [
+          { name: "Quick Start: complete workspace setup", value: "quick-start" },
           { name: "Set up this workspace for coding agents", value: "agent-setup" },
           { name: "Run guided human setup wizard", value: "guided-setup" },
           { name: "Choose and pull a Shopify theme", value: "theme" },
           { name: "Enable Shopify data agent access", value: "data-agent" },
+          { name: "Verify Shopify data agent access", value: "data-verify" },
           { name: "Run doctor checks", value: "doctor" },
           { name: "Regenerate MCP/client configs", value: "configure" },
           { name: "Start theme dev preview", value: "theme-dev" },
@@ -104,6 +119,9 @@ export async function launchCommand(): Promise<void> {
     ]);
 
     switch (answer.action) {
+      case "quick-start":
+        await quickStart();
+        break;
       case "agent-setup":
         await agentSetupFromLauncher();
         break;
@@ -114,8 +132,22 @@ export async function launchCommand(): Promise<void> {
         await connectTheme();
         break;
       case "data-agent":
-        await authCommand();
+        logger.info("Theme CLI access is already enough for theme work. Products, orders, customers, inventory, content, metaobjects, and order support require Shopify data-agent access.");
+        logger.info("Hazify uses Shopify CLI store auth by default. App/OAuth token setup is advanced.");
+        await authCommand({ dataAgent: true });
         break;
+      case "data-verify": {
+        const storeDomain = await getConfiguredStore();
+        const verified = await verifyStoreData(storeDomain);
+        if (verified.ok) {
+          logger.success("Shopify data-agent access verified.");
+          if (verified.stdout) console.log(verified.stdout);
+        } else {
+          logger.warn("Shopify data-agent access is not verified yet. Choose Enable Shopify data agent access first.");
+          if (verified.stderr) logger.muted(verified.stderr);
+        }
+        break;
+      }
       case "doctor":
         await doctorCommand();
         break;

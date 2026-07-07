@@ -5,17 +5,18 @@ import { ensureWorkspaceDirs, upsertLocalConfig } from "../lib/filesystem.js";
 import { runInteractive } from "../lib/exec.js";
 import { logger } from "../lib/logger.js";
 import { writeMcpConfigs } from "../lib/mcpConfig.js";
-import { askAuthMode, askConfirm, askHidden, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
+import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
 import { storeSecret } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
-import { CAPABILITY_SCOPES, DEFAULT_CAPABILITIES, SCOPE_GROUPS, type CapabilityName, uniqueScopes } from "../lib/scopes.js";
+import { SCOPE_GROUPS } from "../lib/scopes.js";
 import { ensureShopifyCliLogin, createOrLinkShopifyApp, writeShopifyAppConfig, checkAppConfig, explainManualFallback } from "../lib/appProvisioning.js";
 import { listThemes, pullTheme, runThemeCheck } from "../lib/themeWorkspace.js";
 import { runLocalOAuth } from "../lib/oauth.js";
 import { themePath } from "../lib/paths.js";
 import { writeAgentSetupGuide } from "../lib/agentSetup.js";
 import type { AiClient, AuthMode } from "../lib/filesystem.js";
+import { authenticateStoreData, verifyStoreData } from "../lib/storeData.js";
 
 interface SetupOptions {
   agent?: boolean;
@@ -35,7 +36,7 @@ function parseClients(value?: string): AiClient[] {
 
 function parseAuthMode(value?: AuthMode): AuthMode {
   if (!value) return "theme-only";
-  if (["shopify-cli-oauth", "admin-api-token", "theme-only"].includes(value)) return value;
+  if (["shopify-store-auth", "shopify-cli-oauth", "admin-api-token", "theme-only"].includes(value)) return value;
   throw new Error(`Unsupported auth mode: ${value}`);
 }
 
@@ -62,23 +63,20 @@ async function maybeInstallAiToolkits(clients: string[]): Promise<void> {
   }
 }
 
-async function askCapabilities(): Promise<string[]> {
-  const answers = await inquirer.prompt<{ capabilities: CapabilityName[] }>([
-    {
-      type: "checkbox",
-      name: "capabilities",
-      message: "What should the agent be allowed to do?",
-      choices: Object.keys(CAPABILITY_SCOPES).map((name) => ({ name, value: name })),
-      default: DEFAULT_CAPABILITIES
-    }
-  ]);
-  return uniqueScopes(answers.capabilities);
-}
-
-async function configureAuth(storeDomain: string, scopes: string[]): Promise<"shopify-cli-oauth" | "admin-api-token" | "theme-only"> {
+async function configureAuth(storeDomain: string, scopes: string[]): Promise<AuthMode> {
   const authMode = await askAuthMode();
   if (authMode === "theme-only") {
     logger.info("Theme-only mode selected. Admin API token setup is skipped.");
+    return authMode;
+  }
+
+  if (authMode === "shopify-store-auth") {
+    logger.info("Shopify CLI store auth will request Admin API scopes and store CLI auth for store commands.");
+    const exitCode = await authenticateStoreData(storeDomain, scopes);
+    if (exitCode !== 0) throw new Error("Shopify store auth did not complete.");
+    const verified = await verifyStoreData(storeDomain);
+    if (verified.ok) logger.success("Shopify data-agent access verified with store execute.");
+    else logger.warn("Store auth completed, but verification query did not succeed yet. Re-run doctor after browser approval.");
     return authMode;
   }
 
@@ -101,7 +99,7 @@ async function configureAuth(storeDomain: string, scopes: string[]): Promise<"sh
     const storage = await storeSecret(`${storeDomain}:admin-api-token`, token.accessToken);
     logger.success(`OAuth completed and Admin API token stored using ${storage}.`);
   } else {
-    logger.warn("Skipping OAuth token storage for now. Run npm run auth when app credentials are ready.");
+    logger.warn("Skipping OAuth token storage for now. Run npm run auth:advanced when app credentials are ready.");
   }
   return authMode;
 }
@@ -162,7 +160,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<void> {
       selectedThemeName: null,
       configuredClients: clients,
       authMode,
-      scopes: authMode === "theme-only" ? [] : [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metafields]
+      scopes: authMode === "theme-only" ? [] : [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metaobjects]
     });
 
     logger.success("Agent-ready configs generated without interactive prompts.");
@@ -186,7 +184,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<void> {
   }
 
   const storeDomain = await askStoreDomain();
-  const scopes = await askCapabilities();
+  const scopes = await askCapabilityScopes();
   const authMode = await configureAuth(storeDomain, scopes);
 
   if (await isShopifyCliInstalled()) {

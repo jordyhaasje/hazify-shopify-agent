@@ -66,6 +66,6 @@ Manual fallback:
 2. Link or create an app in your Shopify Partner account.
 3. Configure these scopes: ${scopes.join(",")}
 4. Set this redirect URL: http://127.0.0.1:3456/callback
-5. Install the app on ${storeDomain}, or run: npm run auth
+5. Install the app on ${storeDomain}, or run: npm run auth:advanced
 6. If OAuth cannot complete, choose "Existing Admin API access token" and paste the token only into the hidden terminal prompt.`;
 }

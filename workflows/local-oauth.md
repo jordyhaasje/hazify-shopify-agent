@@ -1,4 +1,10 @@
-# Local OAuth Workflow
+# Advanced Local OAuth Workflow
+
+This is not the default local data-agent route. Prefer:
+
+```bash
+npm run data:connect
+```
 
 The local OAuth helper is conservative.
 

@@ -13,7 +13,7 @@ export interface AgentSetupOptions {
 
 export async function writeAgentSetupGuide(options: AgentSetupOptions): Promise<string> {
   await writeMcpConfigs(options.clients);
-  const scopes = [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metafields];
+  const scopes = [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metaobjects];
   if (options.storeDomain) {
     await writeShopifyAppConfig(options.storeDomain, scopes);
   }
@@ -41,7 +41,7 @@ Always run commands from the repository root, the folder that contains \`package
 
 1. Run checks and write config files directly.
 2. Never ask for tokens or client secrets in chat.
-3. Use \`npm run auth\` for hidden credential prompts.
+3. Use \`npm run data:connect\` for Shopify data-agent access.
 4. Use Shopify CLI for browser login and theme operations.
 5. Stop before live theme pushes unless the merchant explicitly approves live.
 
@@ -61,10 +61,11 @@ npm run theme:check
 
 The user should not need a theme ID. Show available themes by name and role, then ask the user which theme to pull. Use a theme ID only if Shopify CLI output cannot be parsed.
 
-If Admin API access is needed:
+If Shopify data-agent access is needed:
 
 \`\`\`bash
-npm run auth
+npm run data:connect
+npm run data:verify
 \`\`\`
 
 For Shopify CLI browser login, run \`shopify auth login\` without a store flag, or let \`shopify theme list --store ${store}\` trigger the login flow. Do not run \`shopify auth login --store\`; Shopify CLI v4 does not support that flag.

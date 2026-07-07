@@ -5,6 +5,7 @@ import { logger } from "../lib/logger.js";
 import { claudeMcpPath, codexConfigPath, opencodeConfigPath, themePath } from "../lib/paths.js";
 import { hasSecret } from "../lib/secureStore.js";
 import { getShopifyCliVersion, isShopifyCliInstalled, runShopify } from "../lib/shopifyCli.js";
+import { verifyStoreData } from "../lib/storeData.js";
 
 function check(ok: boolean, pass: string, fail: string): void {
   if (ok) logger.success(pass);
@@ -43,10 +44,13 @@ export async function doctorCommand(): Promise<void> {
   }
 
   if (config?.authMode === "theme-only") {
-    logger.warn("Admin API credentials intentionally skipped for theme-only mode.");
+    logger.warn("Shopify data-agent access intentionally skipped for theme-only mode.");
+  } else if (config?.authMode === "shopify-store-auth" && config.storeDomain) {
+    const verified = await verifyStoreData(config.storeDomain);
+    check(verified.ok, "Shopify data-agent store auth verified", "Shopify data-agent store auth not verified. Run: npm run data:connect");
   } else if (config?.storeDomain) {
     const credentials = await hasSecret(`${config.storeDomain}:admin-api-token`);
-    check(credentials, "Admin API credentials available", "Admin API credentials not configured. Run: npm run auth");
+    check(credentials, "Advanced Admin API credentials available", "Advanced Admin API credentials not configured. Run: npm run auth:advanced");
   } else {
     logger.warn("Admin API credential check skipped until a store is configured.");
   }

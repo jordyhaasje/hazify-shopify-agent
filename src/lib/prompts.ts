@@ -1,6 +1,7 @@
 import inquirer from "inquirer";
 import type { AiClient, AuthMode } from "./filesystem.js";
 import { normalizeThemeReference } from "./themeWorkspace.js";
+import { CAPABILITY_SCOPES, DEFAULT_CAPABILITIES, type CapabilityName, uniqueScopes } from "./scopes.js";
 import { validateStoreDomain } from "./validation.js";
 
 export async function selectAiClients(detected: {
@@ -46,20 +47,42 @@ export async function askStoreDomain(defaultValue?: string): Promise<string> {
   return answers.storeDomain;
 }
 
-export async function askAuthMode(): Promise<AuthMode> {
+export async function askAuthMode(options: { includeThemeOnly?: boolean; includeStoreAuth?: boolean } = {}): Promise<AuthMode> {
+  const includeThemeOnly = options.includeThemeOnly ?? true;
+  const includeStoreAuth = options.includeStoreAuth ?? true;
+  const choices = [
+    { name: "Existing Admin API access token", value: "admin-api-token" },
+    { name: "Advanced: Shopify app / local OAuth", value: "shopify-cli-oauth" }
+  ];
+  if (includeStoreAuth) {
+    choices.unshift({ name: "Shopify CLI store auth (recommended for coding agents)", value: "shopify-store-auth" });
+  }
+  if (includeThemeOnly) {
+    choices.push({ name: "Theme-only mode", value: "theme-only" });
+  }
+
   const answers = await inquirer.prompt<{ authMode: AuthMode }>([
     {
       type: "select",
       name: "authMode",
       message: "How do you want to connect to Shopify Admin API?",
-      choices: [
-        { name: "Shopify CLI app provisioning / local OAuth", value: "shopify-cli-oauth" },
-        { name: "Existing Admin API access token", value: "admin-api-token" },
-        { name: "Theme-only mode", value: "theme-only" }
-      ]
+      choices
     }
   ]);
   return answers.authMode;
+}
+
+export async function askCapabilityScopes(): Promise<string[]> {
+  const answers = await inquirer.prompt<{ capabilities: CapabilityName[] }>([
+    {
+      type: "checkbox",
+      name: "capabilities",
+      message: "What should the data agent be allowed to do?",
+      choices: Object.keys(CAPABILITY_SCOPES).map((name) => ({ name, value: name })),
+      default: DEFAULT_CAPABILITIES
+    }
+  ]);
+  return uniqueScopes(answers.capabilities);
 }
 
 export async function askHidden(message: string): Promise<string> {

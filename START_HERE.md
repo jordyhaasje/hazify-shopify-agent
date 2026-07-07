@@ -33,7 +33,7 @@ Please do everything from your terminal tools:
 
 Do not ask me for theme IDs unless the theme list cannot be parsed.
 Do not ask me to paste tokens or secrets in chat.
-Use the launcher's "Enable Shopify data agent access" option only if Admin API access is needed.
+After theme setup, ask me whether I also want product/order/customer/inventory data-agent access. If yes, use the launcher's "Enable Shopify data agent access" option.
 Never push to the live theme unless I explicitly approve live deployment.
 ```
 
@@ -52,6 +52,24 @@ The normal flow is:
 5. Shopify CLI asks for a theme selection if needed.
 
 Theme IDs are only a fallback when Shopify CLI output cannot be parsed.
+
+## Data Agent Functions
+
+Theme setup does not automatically enable product, order, customer, inventory, content, metaobject, or order-support operations.
+
+When the user asks for Shopify data-agent functions, the coding agent should use the launcher option:
+
+```bash
+npm start
+```
+
+Then choose:
+
+```text
+Enable Shopify data agent access
+```
+
+This asks for the needed capabilities, runs Shopify CLI `store auth`, and verifies access with `store execute`. The user should not paste tokens into chat.
 
 ## When Should A User Run Commands Manually?
 

@@ -62,13 +62,14 @@ For Shopify CLI v4, use `shopify auth login` without a store flag, or let `shopi
 
 If browser login opens the wrong browser or fails because an existing browser is already open, copy the URL/code shown by Shopify CLI, finish login manually, then rerun `shopify theme list --store example.myshopify.com`.
 
-Admin API access uses one of three modes:
+Data-agent access uses Shopify CLI store auth by default:
 
-- Shopify CLI app provisioning / local OAuth.
-- Existing Admin API access token.
-- Theme-only mode.
+```bash
+npm run data:connect
+npm run data:verify
+```
 
-If automatic app provisioning cannot be verified because of Shopify CLI version, Partner account permissions, or app setup requirements, setup prints manual fallback steps. It does not fake success.
+This runs `shopify store auth --store <store> --scopes <scopes>` and verifies access with a read-only `shopify store execute` query. Existing Admin API tokens and local OAuth are advanced fallback routes.
 
 ## Credential Storage
 
@@ -99,7 +100,9 @@ npm run launch
 npm start
 npm run doctor
 npm run configure
-npm run auth
+npm run data:connect
+npm run data:verify
+npm run auth:advanced
 npm run theme:list
 npm run theme:pull
 npm run theme:check
@@ -108,6 +111,13 @@ npm run theme:dev
 
 Users do not need to know theme IDs. Run `npm run theme:list`, choose by theme name/role, then run `npm run theme:pull`. Theme IDs are only a fallback.
 
+Theme access and data-agent access are different:
+
+- Theme work uses Shopify CLI and the local `./theme` folder.
+- Product, order, customer, inventory, metaobject, and content operations require data-agent access.
+- Use the launcher option "Enable Shopify data agent access" or run `npm run data:connect`.
+- Shopify CLI can create/link an app and manage app config, but ordinary CLI login alone is not data-agent access. Hazify uses Shopify CLI `store auth` as the default data route.
+
 The built package also exposes:
 
 ```bash
@@ -115,6 +125,8 @@ hazify-shopify-agent setup
 hazify-shopify-agent launch
 hazify-shopify-agent doctor
 hazify-shopify-agent auth
+hazify-shopify-agent data connect
+hazify-shopify-agent data verify
 hazify-shopify-agent theme list
 hazify-shopify-agent theme pull
 hazify-shopify-agent theme check

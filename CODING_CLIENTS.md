@@ -85,7 +85,16 @@ Agents should not collect secrets in chat. When a token, client secret, or OAuth
 npm run launch
 ```
 
-Then choose "Enable Shopify data agent access". This uses hidden terminal prompts and secure local storage. If the coding client cannot interact with the launcher, run `npm run auth` directly.
+Then choose "Enable Shopify data agent access". This runs Shopify CLI `store auth`, opens browser approval if needed, and verifies access with `store execute`.
+
+For non-interactive command routing, use:
+
+```bash
+npm run data:connect
+npm run data:verify
+```
+
+Shopify CLI login can create/link apps and manage app configuration, but it does not by itself give this workspace data-agent access. Use `store auth` for the normal local agent route.
 
 Browser login flows, Shopify account permissions, and app authorization may still require the human merchant to approve something in the browser.
 
