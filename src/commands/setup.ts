@@ -5,12 +5,12 @@ import { ensureWorkspaceDirs, upsertLocalConfig } from "../lib/filesystem.js";
 import { runInteractive } from "../lib/exec.js";
 import { logger } from "../lib/logger.js";
 import { writeMcpConfigs } from "../lib/mcpConfig.js";
-import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askInput, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
+import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
 import { storeAdminApiToken } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
-import { SCOPE_GROUPS } from "../lib/scopes.js";
-import { ensureShopifyCliLogin, createOrLinkShopifyApp, writeShopifyAppConfig, checkAppConfig, explainManualFallback } from "../lib/appProvisioning.js";
+import { DEFAULT_DATA_AGENT_SCOPES } from "../lib/scopes.js";
+import { ensureShopifyCliLogin, provisionShopifyAppCredentials, explainManualFallback } from "../lib/appProvisioning.js";
 import { listThemes, pullTheme, runThemeCheck } from "../lib/themeWorkspace.js";
 import { runLocalOAuth } from "../lib/oauth.js";
 import { themePath } from "../lib/paths.js";
@@ -84,15 +84,15 @@ async function configureAuth(storeDomain: string, scopes: string[]): Promise<Aut
     return authMode;
   }
 
-  await writeShopifyAppConfig(storeDomain, scopes);
-  await checkAppConfig();
-  const linked = await createOrLinkShopifyApp(storeDomain, scopes);
-  if (!linked) logger.warn(explainManualFallback(storeDomain, scopes));
-
   if (authMode === "shopify-oauth-offline" || authMode === "shopify-cli-oauth") {
-    const clientId = await askInput("Shopify app client ID:");
-    const clientSecret = await askHidden("Shopify app client secret (hidden):");
-    const token = await runLocalOAuth({ storeDomain, clientId, clientSecret, scopes });
+    let credentials;
+    try {
+      credentials = await provisionShopifyAppCredentials(storeDomain, scopes);
+    } catch (error) {
+      logger.warn(explainManualFallback(storeDomain, scopes));
+      throw error;
+    }
+    const token = await runLocalOAuth({ storeDomain, ...credentials, scopes });
     const storage = await storeAdminApiToken(storeDomain, token.accessToken);
     logger.success(`Permanent offline Admin API token stored using ${storage}.`);
     const verified = await verifyStoreData(storeDomain);
@@ -158,7 +158,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<void> {
       selectedThemeName: null,
       configuredClients: clients,
       authMode,
-      scopes: authMode === "theme-only" ? [] : [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metaobjects]
+      scopes: authMode === "theme-only" ? [] : DEFAULT_DATA_AGENT_SCOPES
     });
 
     logger.success("Agent-ready configs generated without interactive prompts.");

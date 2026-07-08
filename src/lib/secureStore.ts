@@ -5,6 +5,8 @@ import { askHidden } from "./prompts.js";
 
 const SERVICE = "hazify-shopify-agent";
 const ADMIN_API_TOKEN_SUFFIX = "admin-api-token";
+const APP_CLIENT_ID_SUFFIX = "shopify-app-client-id";
+const APP_CLIENT_SECRET_SUFFIX = "shopify-app-client-secret";
 
 interface KeytarLike {
   getPassword(service: string, account: string): Promise<string | null>;
@@ -106,6 +108,23 @@ export async function storeAdminApiToken(
   return storeSecret(adminApiTokenAccount(storeDomain), token);
 }
 
+export function shopifyAppClientIdAccount(storeDomain: string): string {
+  return `${storeDomain}:${APP_CLIENT_ID_SUFFIX}`;
+}
+
+export function shopifyAppClientSecretAccount(storeDomain: string): string {
+  return `${storeDomain}:${APP_CLIENT_SECRET_SUFFIX}`;
+}
+
+export async function storeShopifyAppCredentials(
+  storeDomain: string,
+  credentials: { clientId: string; clientSecret: string }
+): Promise<"keytar" | "encrypted-file"> {
+  const location = await storeSecret(shopifyAppClientIdAccount(storeDomain), credentials.clientId);
+  await storeSecret(shopifyAppClientSecretAccount(storeDomain), credentials.clientSecret);
+  return location;
+}
+
 export async function readSecret(account: string, { prompt = true }: { prompt?: boolean } = {}): Promise<string | null> {
   const keytar = await loadKeytar();
   if (keytar) return keytar.getPassword(SERVICE, account);
@@ -121,6 +140,18 @@ export async function readAdminApiToken(
   options: { prompt?: boolean } = {}
 ): Promise<string | null> {
   return readSecret(adminApiTokenAccount(storeDomain), options);
+}
+
+export async function readShopifyAppCredentials(
+  storeDomain: string,
+  options: { prompt?: boolean } = {}
+): Promise<{ clientId: string; clientSecret: string } | null> {
+  const [clientId, clientSecret] = await Promise.all([
+    readSecret(shopifyAppClientIdAccount(storeDomain), options),
+    readSecret(shopifyAppClientSecretAccount(storeDomain), options)
+  ]);
+  if (!clientId || !clientSecret) return null;
+  return { clientId, clientSecret };
 }
 
 export async function hasSecret(account: string): Promise<boolean> {

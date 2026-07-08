@@ -11,6 +11,8 @@ export const SCOPE_GROUPS = {
   ],
   content: ["read_content", "write_content", "read_files", "write_files"],
   themes: ["read_themes", "write_themes"],
+  discounts: ["read_discounts", "write_discounts"],
+  draftOrders: ["read_draft_orders", "write_draft_orders"],
   metaobjects: [
     "read_metaobjects",
     "write_metaobjects",
@@ -63,6 +65,8 @@ export const CAPABILITY_SCOPES = {
   Customers: ["read_customers", "write_customers"],
   Orders: ["read_orders"],
   Inventory: ["read_inventory", "write_inventory", "read_locations"],
+  Discounts: SCOPE_GROUPS.discounts,
+  "Draft orders": SCOPE_GROUPS.draftOrders,
   Content: SCOPE_GROUPS.content,
   Themes: SCOPE_GROUPS.themes,
   "Metaobjects": SCOPE_GROUPS.metaobjects,
@@ -78,3 +82,16 @@ export function uniqueScopes(capabilities: CapabilityName[]): string[] {
 export const DEFAULT_CAPABILITIES: CapabilityName[] = [
   "Read-only store assistant"
 ];
+
+export const DEFAULT_DATA_AGENT_CAPABILITIES: CapabilityName[] = [
+  "Catalog manager",
+  "Content/theme manager",
+  "Order management",
+  "Customers",
+  "Inventory",
+  "Discounts",
+  "Draft orders",
+  "Metaobjects"
+];
+
+export const DEFAULT_DATA_AGENT_SCOPES = uniqueScopes(DEFAULT_DATA_AGENT_CAPABILITIES);

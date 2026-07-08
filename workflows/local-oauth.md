@@ -10,6 +10,9 @@ The local OAuth helper is conservative.
 
 It:
 
+- Provisions or links the Shopify app through Shopify CLI.
+- Applies app scopes and redirect URLs with non-interactive Shopify CLI flags where supported.
+- Pulls app credentials from Shopify CLI env output.
 - Starts a callback server on `127.0.0.1:3456`.
 - Uses redirect URL `http://127.0.0.1:3456/callback`.
 - Generates a random OAuth state.
@@ -20,4 +23,4 @@ It:
 - Stores the token securely.
 - Regenerates MCP configs with the local `shopify-admin-api` server.
 
-You need a Shopify Custom App client ID, client secret, redirect URL, and scopes. Shopify requires the merchant to approve installation once in the browser; a coding agent can open the flow and wait, but cannot approve it headlessly. If those app credentials are not available, complete app setup in Shopify first or use `npm run data:legacy-store-auth` as a temporary fallback.
+Shopify requires the merchant to approve installation once in the browser; a coding agent can open the flow and wait, but cannot approve it headlessly. If app provisioning is blocked by account permissions, use `npm run data:legacy-store-auth` as a temporary fallback.

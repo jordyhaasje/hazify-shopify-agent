@@ -5,6 +5,7 @@ export const hazifyDir = path.join(repoRoot, ".hazify");
 export const localConfigPath = path.join(hazifyDir, "config.local.json");
 export const localAgentSetupPath = path.join(hazifyDir, "agent-setup.md");
 export const localAppConfigPath = path.join(hazifyDir, "app", "shopify.app.toml");
+export const localAppEnvPath = path.join(hazifyDir, "app", ".env");
 export const encryptedCredentialsPath = path.join(hazifyDir, "credentials.enc.json");
 export const themePath = path.join(repoRoot, "theme");
 export const codexConfigPath = path.join(repoRoot, ".codex", "config.toml");

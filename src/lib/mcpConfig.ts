@@ -104,7 +104,7 @@ export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
   return JSON.stringify(
     {
       "$schema": "https://opencode.ai/config.json",
-      instructions: ["AGENTS.md", "OPENCODE.md"],
+      instructions: ["AGENTS.md"],
       mcp
     },
     null,

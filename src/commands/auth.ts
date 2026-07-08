@@ -1,17 +1,16 @@
 import { readLocalConfig, upsertLocalConfig } from "../lib/filesystem.js";
 import { logger } from "../lib/logger.js";
-import { askAuthMode, askCapabilityScopes, askHidden, askInput, askStoreDomain } from "../lib/prompts.js";
+import { askAuthMode, askCapabilityScopes, askHidden, askStoreDomain } from "../lib/prompts.js";
 import { storeAdminApiToken } from "../lib/secureStore.js";
 import { runLocalOAuth } from "../lib/oauth.js";
-import { createOrLinkShopifyApp } from "../lib/appProvisioning.js";
+import { provisionShopifyAppCredentials } from "../lib/appProvisioning.js";
 import { legacyAuthenticateStoreData, verifyStoreData } from "../lib/storeData.js";
 import { writeMcpConfigs } from "../lib/mcpConfig.js";
+import { DEFAULT_DATA_AGENT_SCOPES } from "../lib/scopes.js";
 
 async function runPermanentOAuth(storeDomain: string, scopes: string[]): Promise<void> {
-  await createOrLinkShopifyApp(storeDomain, scopes);
-  const clientId = await askInput("Shopify app client ID:");
-  const clientSecret = await askHidden("Shopify app client secret (hidden):");
-  const token = await runLocalOAuth({ storeDomain, clientId, clientSecret, scopes });
+  const credentials = await provisionShopifyAppCredentials(storeDomain, scopes);
+  const token = await runLocalOAuth({ storeDomain, ...credentials, scopes });
   const location = await storeAdminApiToken(storeDomain, token.accessToken);
   const storedScopes = token.scope ? token.scope.split(",").map((scope) => scope.trim()).filter(Boolean) : scopes;
   const config = await upsertLocalConfig({ storeDomain, authMode: "shopify-oauth-offline", scopes: storedScopes });
@@ -33,6 +32,8 @@ export async function authCommand(options: { dataAgent?: boolean; advanced?: boo
   const scopes =
     authMode === "theme-only"
       ? []
+      : options.dataAgent && !options.advanced
+        ? DEFAULT_DATA_AGENT_SCOPES
       : await askCapabilityScopes();
 
   if (authMode === "theme-only") {

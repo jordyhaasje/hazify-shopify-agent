@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import { fromRoot, type AiClient, type AuthMode } from "./filesystem.js";
 import { writeMcpConfigs } from "./mcpConfig.js";
 import { localAgentSetupPath, themePath, toDisplayPath } from "./paths.js";
-import { SCOPE_GROUPS } from "./scopes.js";
+import { DEFAULT_DATA_AGENT_SCOPES } from "./scopes.js";
 import { writeShopifyAppConfig } from "./appProvisioning.js";
 
 export interface AgentSetupOptions {
@@ -13,7 +13,7 @@ export interface AgentSetupOptions {
 
 export async function writeAgentSetupGuide(options: AgentSetupOptions): Promise<string> {
   await writeMcpConfigs(options.clients);
-  const scopes = [...SCOPE_GROUPS.baseStoreData, ...SCOPE_GROUPS.content, ...SCOPE_GROUPS.themes, ...SCOPE_GROUPS.metaobjects];
+  const scopes = DEFAULT_DATA_AGENT_SCOPES;
   if (options.storeDomain) {
     await writeShopifyAppConfig(options.storeDomain, scopes);
   }
@@ -41,7 +41,7 @@ Always run commands from the repository root, the folder that contains \`package
 
 1. Run checks and write config files directly.
 2. Never ask for tokens or client secrets in chat.
-3. Use \`npm run data:connect\` for permanent Shopify data-agent access.
+3. Use \`npm run data:connect\` for permanent Shopify data-agent access; it provisions app credentials automatically.
 4. Use Shopify CLI for theme browser login and theme operations.
 5. Stop before live theme pushes unless the merchant explicitly approves live.
 
@@ -68,7 +68,7 @@ npm run data:connect
 npm run data:verify
 \`\`\`
 
-This creates a one-time Shopify OAuth browser approval for a Custom App, stores the resulting offline Admin API token locally, and regenerates MCP configs with \`shopify-admin-api\`. The agent may run the command, but the merchant must approve app installation in the browser once.
+This provisions or links the Shopify app, pulls app credentials through Shopify CLI, creates a one-time Shopify browser approval, stores the resulting offline Admin API token locally, and regenerates MCP configs with \`shopify-admin-api\`. The agent may run the command, but the merchant must approve app installation in the browser once.
 
 For Shopify CLI browser login, run \`shopify auth login\` without a store flag, or let \`shopify theme list --store ${store}\` trigger the login flow. Do not run \`shopify auth login --store\`; Shopify CLI v4 does not support that flag.
 
