@@ -5,9 +5,31 @@
   "type": "module",
   "license": "MIT",
   "private": false,
-  "bin": {
-    "hazify-shopify-agent": "./dist/cli.js"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jordyhaasje/hazify-shopify-agent.git"
   },
+  "bin": {
+    "hazify-shopify-agent": "./bin/cli.js"
+  },
+  "files": [
+    ".codex/",
+    ".env.example",
+    ".mcp.json",
+    "AGENTS.md",
+    "LICENSE",
+    "README.md",
+    "START_HERE.md",
+    "app-template/",
+    "bin/",
+    "configs/",
+    "opencode.json",
+    "prompts/",
+    "src/",
+    "theme/.gitkeep",
+    "tsconfig.json",
+    "workflows/"
+  ],
   "scripts": {
     "start": "tsx src/cli.ts launch",
     "build": "tsc",
@@ -36,12 +58,12 @@
     "inquirer": "latest",
     "open": "latest",
     "ora": "latest",
+    "tsx": "latest",
     "zod": "latest"
   },
   "devDependencies": {
     "@types/fs-extra": "latest",
     "@types/node": "latest",
-    "tsx": "latest",
     "typescript": "latest"
   },
   "optionalDependencies": {
