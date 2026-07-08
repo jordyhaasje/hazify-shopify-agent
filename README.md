@@ -72,6 +72,12 @@ No currently tested Shopify CLI MCP package is installable from npm. Hazify ther
 
 ## Coding Client Notes
 
+Codex reads `AGENTS.md` and project MCP config from `.codex/config.toml`.
+
+Claude Code reads `CLAUDE.md`; this repository keeps `CLAUDE.md` as a tiny import of `AGENTS.md` so Claude, Codex, and OpenCode share one source of rules. Claude Code reads project MCP servers from `.mcp.json`.
+
+OpenCode reads `AGENTS.md` automatically. OpenCode MCP servers are defined in the `mcp` section of `opencode.json`.
+
 If npm reports `Could not read package.json`, the terminal is not in the repository root. The agent should open or `cd` into the folder that contains `package.json`.
 
 For Shopify CLI v4, run `shopify auth login` without a store flag, or let a store command such as `shopify theme list --store example.myshopify.com` trigger login. Do not run `shopify auth login --store`; that flag is not supported.

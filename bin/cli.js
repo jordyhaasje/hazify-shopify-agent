@@ -6,10 +6,19 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const tsxCli = require.resolve("tsx/cli");
-const cliEntry = path.join(packageRoot, "src", "cli.ts");
+const distEntry = path.join(packageRoot, "dist", "cli.js");
+const sourceEntry = path.join(packageRoot, "src", "cli.ts");
+let args;
 
-const child = spawn(process.execPath, [tsxCli, cliEntry, ...process.argv.slice(2)], {
+try {
+  require.resolve(distEntry);
+  args = [distEntry, ...process.argv.slice(2)];
+} catch {
+  const tsxCli = require.resolve("tsx/cli");
+  args = [tsxCli, sourceEntry, ...process.argv.slice(2)];
+}
+
+const child = spawn(process.execPath, args, {
   cwd: process.cwd(),
   stdio: "inherit"
 });

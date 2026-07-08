@@ -28,7 +28,11 @@ export async function authCommand(options: { dataAgent?: boolean; advanced?: boo
   const storeDomain = existing?.storeDomain || (await askStoreDomain());
   const authMode = options.dataAgent && !options.advanced
     ? "shopify-oauth-offline"
-    : await askAuthMode({ includeThemeOnly: !options.dataAgent, includeStoreAuth: !options.advanced });
+    : await askAuthMode({
+        includeThemeOnly: !options.dataAgent,
+        includeStoreAuth: options.advanced,
+        includeAdvanced: options.advanced
+      });
   const scopes =
     authMode === "theme-only"
       ? []

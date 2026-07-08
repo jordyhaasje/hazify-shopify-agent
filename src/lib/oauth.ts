@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import open from "open";
+import { logger } from "./logger.js";
 
 export interface OAuthOptions {
   storeDomain: string;
@@ -97,7 +98,16 @@ export async function runLocalOAuth(options: OAuthOptions): Promise<OAuthTokenRe
 
   // This browser step is intentionally not headless: Shopify requires the merchant
   // to approve app installation once. The stored offline token is reused after that.
-  await open(installUrl.toString());
+  const installUrlText = installUrl.toString();
+  logger.step("Shopify browser approval");
+  logger.info("Opening Shopify so the merchant can approve the local store assistant once.");
+  logger.info("If the browser does not open, copy this URL into the browser:");
+  logger.info(installUrlText);
+  try {
+    await open(installUrlText);
+  } catch {
+    logger.warn("The browser did not open automatically. Use the URL above, then return here after approval.");
+  }
   try {
     const callback = await callbackPromise;
     const tokenResponse = await fetch(`https://${options.storeDomain}/admin/oauth/access_token`, {

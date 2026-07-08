@@ -47,14 +47,21 @@ export async function askStoreDomain(defaultValue?: string): Promise<string> {
   return answers.storeDomain;
 }
 
-export async function askAuthMode(options: { includeThemeOnly?: boolean; includeStoreAuth?: boolean } = {}): Promise<AuthMode> {
+export async function askAuthMode(
+  options: { includeThemeOnly?: boolean; includeStoreAuth?: boolean; includeAdvanced?: boolean } = {}
+): Promise<AuthMode> {
   const includeThemeOnly = options.includeThemeOnly ?? true;
-  const includeStoreAuth = options.includeStoreAuth ?? true;
+  const includeStoreAuth = options.includeStoreAuth ?? false;
+  const includeAdvanced = options.includeAdvanced ?? false;
   const choices = [
-    { name: "One-time Shopify OAuth install (recommended permanent data agent)", value: "shopify-oauth-offline" },
-    { name: "Existing Admin API access token", value: "admin-api-token" },
-    { name: "Advanced: legacy local OAuth", value: "shopify-cli-oauth" }
+    { name: "One-time Shopify OAuth install (recommended permanent data agent)", value: "shopify-oauth-offline" }
   ];
+  if (includeAdvanced) {
+    choices.push(
+      { name: "Advanced: existing Admin API access token", value: "admin-api-token" },
+      { name: "Advanced: legacy local OAuth", value: "shopify-cli-oauth" }
+    );
+  }
   if (includeStoreAuth) {
     choices.push({ name: "Legacy: Shopify CLI store auth (temporary token fallback)", value: "shopify-store-auth" });
   }

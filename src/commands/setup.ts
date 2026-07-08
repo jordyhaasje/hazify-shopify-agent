@@ -10,7 +10,7 @@ import { storeAdminApiToken } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
 import { DEFAULT_DATA_AGENT_SCOPES } from "../lib/scopes.js";
-import { ensureShopifyCliLogin, provisionShopifyAppCredentials, explainManualFallback } from "../lib/appProvisioning.js";
+import { ensureShopifyCliLogin, provisionShopifyAppCredentials, explainProvisioningRecovery } from "../lib/appProvisioning.js";
 import { listThemes, pullTheme, runThemeCheck } from "../lib/themeWorkspace.js";
 import { runLocalOAuth } from "../lib/oauth.js";
 import { themePath } from "../lib/paths.js";
@@ -59,7 +59,7 @@ async function maybeInstallAiToolkits(clients: string[]): Promise<void> {
   }
   if (clients.includes("opencode")) {
     logger.step("OpenCode Shopify configuration");
-    logger.info("OpenCode uses project config. Setup writes opencode.json with Shopify Dev MCP and local instructions.");
+    logger.info("OpenCode uses project config. Setup writes opencode.json with Shopify Dev MCP servers.");
   }
 }
 
@@ -89,7 +89,7 @@ async function configureAuth(storeDomain: string, scopes: string[]): Promise<Aut
     try {
       credentials = await provisionShopifyAppCredentials(storeDomain, scopes);
     } catch (error) {
-      logger.warn(explainManualFallback(storeDomain, scopes));
+      logger.warn(explainProvisioningRecovery(storeDomain, scopes));
       throw error;
     }
     const token = await runLocalOAuth({ storeDomain, ...credentials, scopes });

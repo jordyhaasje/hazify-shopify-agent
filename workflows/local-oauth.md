@@ -17,10 +17,11 @@ It:
 - Uses redirect URL `http://127.0.0.1:3456/callback`.
 - Generates a random OAuth state.
 - Opens the Shopify install URL in the browser.
+- Prints the install URL as a fallback if the browser does not open.
 - Validates returned state.
 - Validates Shopify HMAC when callback parameters are present.
 - Exchanges the OAuth code for a permanent offline access token.
 - Stores the token securely.
 - Regenerates MCP configs with the local `shopify-admin-api` server.
 
-Shopify requires the merchant to approve installation once in the browser; a coding agent can open the flow and wait, but cannot approve it headlessly. If app provisioning is blocked by account permissions, use `npm run data:legacy-store-auth` as a temporary fallback.
+Shopify requires the merchant to approve installation once in the browser; a coding agent can open the flow and wait, but cannot approve it headlessly. Do not replace this with manual Custom App instructions. If app provisioning is blocked by account permissions, use `npm run data:legacy-store-auth` as a temporary fallback.

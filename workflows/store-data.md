@@ -21,7 +21,9 @@ npm run data:verify
 
 Under the hood, this provisions or links the Shopify app, pulls app credentials through Shopify CLI, opens a one-time Shopify app approval in the browser, stores an offline Admin API token locally, regenerates MCP configs with `shopify-admin-api`, and verifies with a read-only Admin GraphQL query.
 
-If a Custom App cannot be created, use the legacy temporary fallback:
+Do not ask the merchant to manually create a Custom App, copy a client ID, copy a client secret, or paste an access token into chat. The normal flow is CLI-backed app setup plus one browser approval.
+
+If CLI-backed app setup cannot be completed because the account lacks app-development permissions, use the legacy temporary fallback:
 
 ```bash
 npm run data:legacy-store-auth

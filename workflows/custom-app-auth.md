@@ -18,7 +18,9 @@ Supported modes:
 
 Hazify uses Shopify CLI to initialize or link the app config, apply scopes and redirect URLs, and read app credentials from `shopify app env show` or `shopify app env pull`. The coding agent should not ask the merchant for the app client ID or client secret.
 
-The OAuth flow still requires one explicit merchant approval in the browser. The agent can open the flow and wait, but cannot click approval headlessly.
+The agent should not instruct the merchant to go to Shopify Admin, open Develop apps, create a Custom App, paste redirect URLs, or copy app credentials. Run `npm run data:connect` instead. If Shopify CLI asks for an organization or app, choose or create `Hazify Shopify Agent` through the terminal/browser flow.
+
+The OAuth flow still requires one explicit merchant approval in the browser. The agent can open the flow, print the fallback URL, and wait, but cannot click approval headlessly.
 
 Never paste secrets into chat. Use:
 

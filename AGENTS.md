@@ -25,6 +25,9 @@ Use task context on demand:
 - Prefer `npm run launch` for guided setup.
 - For a pasted merchant onboarding prompt, run commands yourself: install dependencies, install Shopify CLI if missing, configure clients, connect the store, provision app access, pull a theme, and run checks.
 - Use `npm run data:connect` for permanent data-agent access. It provisions/links the Shopify app, pulls app credentials through Shopify CLI, opens the one required browser approval, stores the offline Admin API token locally, updates MCP configs, and verifies access.
+- Do not tell the merchant to manually create a Custom App in Shopify Admin. Run the CLI-backed app setup yourself.
+- If Shopify CLI asks which organization or app to use, choose or create `Hazify Shopify Agent` from the terminal/browser flow. Do not ask the merchant for a client ID or client secret.
+- If Shopify CLI cannot provision the app, explain that the store owner may need app-development permissions or help from a store admin, then retry `npm run data:connect`.
 - The merchant may need to approve Shopify login or app installation in the browser once. Explain plainly what they are approving and wait.
 
 ## Secrets
