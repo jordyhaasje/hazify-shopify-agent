@@ -33,7 +33,7 @@ Please do everything from your terminal tools:
 
 Do not ask me for theme IDs unless the theme list cannot be parsed.
 Do not ask me to paste tokens or secrets in chat.
-After theme setup, ask me whether I also want product/order/customer/inventory data-agent access. If yes, use the launcher's "Enable Shopify data agent access" option.
+After theme setup, ask me whether I also want product/order/customer/inventory data-agent access. If yes, use the launcher's "Enable Shopify data agent access" option, guide me through the one-time Shopify Custom App browser approval, and then verify the stored offline Admin API token.
 Never push to the live theme unless I explicitly approve live deployment.
 ```
 
@@ -69,7 +69,9 @@ Then choose:
 Enable Shopify data agent access
 ```
 
-This asks for the needed capabilities, runs Shopify CLI `store auth`, and verifies access with `store execute`. The user should not paste tokens into chat.
+This asks for the needed capabilities, opens a one-time Shopify OAuth browser approval for a Custom App, stores the permanent offline Admin API token locally, regenerates MCP configs, and verifies access with `npm run data:verify`. The user should not paste tokens or client secrets into chat.
+
+If the merchant cannot create a Custom App, the coding agent may use `npm run data:legacy-store-auth` as a temporary fallback. Do not use that as the default path.
 
 ## When Should A User Run Commands Manually?
 

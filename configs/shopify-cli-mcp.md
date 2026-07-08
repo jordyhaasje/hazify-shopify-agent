@@ -4,6 +4,8 @@ The setup objective referenced `@AaronStackBarnes/shopify-cli-mcp`, but npm reje
 
 To avoid generating broken MCP configs, Hazify configures Shopify Dev MCP by default and uses direct Shopify CLI wrappers for theme commands.
 
+This optional CLI MCP route is separate from store-data access. For product, order, customer, inventory, content, or metaobject operations, use `npm run data:connect`; it adds Hazify's local `shopify-admin-api` MCP server after the offline Admin API token is stored.
+
 If your team has a verified Shopify CLI MCP package, generate configs with:
 
 ```bash

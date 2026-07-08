@@ -9,7 +9,7 @@ This workspace is configured for Shopify work through Shopify AI Toolkit, Shopif
 - When the user asks to configure, connect, pull, or enable something, run the needed terminal command yourself when Claude Code has terminal access. Only pause for hidden secrets or browser approval.
 - For Shopify data-agent operations beyond themes, use the launcher option "Enable Shopify data agent access" or run `npm run data:connect` and `npm run data:verify`.
 - Do not duplicate Shopify docs in this repo.
-- Never ask for secrets in chat. Use Shopify CLI store auth or hidden prompts.
+- Never ask for secrets in chat. Use `npm run data:connect` for the one-time OAuth browser approval and hidden prompts for app secrets.
 - Do not ask for Shopify IDs first. Resolve products, customers, orders, collections, and pages from merchant-friendly identifiers.
 - Inspect the existing theme before creating or editing Liquid, CSS, JS, templates, locales, snippets, or blocks.
 - Run `npm run theme:check` before any push.

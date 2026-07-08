@@ -85,7 +85,7 @@ Agents should not collect secrets in chat. When a token, client secret, or OAuth
 npm run launch
 ```
 
-Then choose "Enable Shopify data agent access". This runs Shopify CLI `store auth`, opens browser approval if needed, and verifies access with `store execute`.
+Then choose "Enable Shopify data agent access". This opens a one-time Shopify OAuth browser approval for a Custom App, stores the offline Admin API token locally, updates MCP configs with `shopify-admin-api`, and verifies access with `npm run data:verify`.
 
 For non-interactive command routing, use:
 
@@ -94,7 +94,7 @@ npm run data:connect
 npm run data:verify
 ```
 
-Shopify CLI login can create/link apps and manage app configuration, but it does not by itself give this workspace data-agent access. Use `store auth` for the normal local agent route.
+Shopify CLI login can create/link apps and manage app configuration, but it does not by itself give this workspace data-agent access. Use `npm run data:connect` for the normal permanent data route. Use `npm run data:legacy-store-auth` only when a Custom App cannot be created.
 
 Browser login flows, Shopify account permissions, and app authorization may still require the human merchant to approve something in the browser.
 
@@ -104,6 +104,8 @@ Coding agents should treat browser auth as a checkpoint:
 2. Tell the user to complete browser login or copy/paste the shown code.
 3. Wait for the command to finish or ask the user to confirm completion.
 4. Verify with `shopify theme list --store example.myshopify.com`.
+
+For data-agent OAuth, verify with `npm run data:verify` after the merchant approves the Custom App install.
 
 If the default browser fails because another browser instance is already open, copy the login URL/code from the terminal and finish the login in any browser. Then return to the coding client and rerun the verification command.
 

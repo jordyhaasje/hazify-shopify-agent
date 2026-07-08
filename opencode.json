@@ -13,6 +13,21 @@
         "@shopify/dev-mcp@latest"
       ],
       "enabled": true
+    },
+    "shopify-admin-api": {
+      "type": "local",
+      "command": [
+        "npm",
+        "run",
+        "mcp:admin",
+        "--silent"
+      ],
+      "enabled": true,
+      "environment": {
+        "SHOPIFY_STORE_DOMAIN": "your-store.myshopify.com",
+        "SHOPIFY_ADMIN_API_TOKEN": "{env:SHOPIFY_ADMIN_API_TOKEN}",
+        "SHOPIFY_ADMIN_API_VERSION": "2026-07"
+      }
     }
   }
 }

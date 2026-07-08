@@ -75,11 +75,13 @@ npm run data:connect
 npm run data:verify
 ```
 
-This uses Shopify CLI `store auth` and verifies with `store execute`.
+This uses the one-time Shopify OAuth Custom App flow and verifies the stored offline Admin API token with a read-only Admin GraphQL query.
 
 For order-management features, include the `Order management` capability. Older orders may require the extra `read_all_orders` scope, which can require additional Shopify approval.
 
-If `store execute` says auth is missing or expired, rerun `npm run data:connect`.
+If verification says no stored token is available, rerun `npm run data:connect`.
+
+If your account cannot create a Custom App, run `npm run data:legacy-store-auth` as a temporary Shopify CLI fallback. Tokens from that route can expire.
 
 ## Keychain Storage Unavailable
 
@@ -98,6 +100,8 @@ You can test Shopify Dev MCP directly:
 ```bash
 npx -y @shopify/dev-mcp@latest
 ```
+
+After `npm run data:connect`, configs should also include `shopify-admin-api`. If that server is missing, rerun `npm run configure` after confirming `npm run data:verify` succeeds.
 
 If you add a Shopify CLI MCP package, verify it is installable with `npm view <package>` before adding it to MCP config. The sample package names found in some public listings were not published to npm when this repo was created.
 

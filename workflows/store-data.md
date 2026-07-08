@@ -12,18 +12,19 @@ Resolve resources naturally:
 
 If a lookup returns multiple matches, ask the user to choose. If a change is destructive or hard to reverse, propose it first and wait for confirmation.
 
-Use Shopify CLI store auth and store execute as the default local data-agent route:
+Use the permanent OAuth flow as the default local data-agent route:
 
 ```bash
 npm run data:connect
 npm run data:verify
 ```
 
-Under the hood, this uses:
+Under the hood, this opens a one-time Shopify Custom App approval in the browser, stores an offline Admin API token locally, regenerates MCP configs with `shopify-admin-api`, and verifies with a read-only Admin GraphQL query.
+
+If a Custom App cannot be created, use the legacy temporary fallback:
 
 ```bash
-shopify store auth --store <store>.myshopify.com --scopes <selected-scopes>
-shopify store execute --store <store>.myshopify.com --query "query { shop { name myshopifyDomain } }" --json
+npm run data:legacy-store-auth
 ```
 
-Use Shopify AI Toolkit and Shopify Dev MCP to validate GraphQL before executing store operations. Do not build a parallel Admin API system in this repo.
+Use Shopify AI Toolkit and Shopify Dev MCP to validate GraphQL before executing store operations. The local Admin API MCP server is for authenticated execution against the merchant's store; it is not a replacement for Shopify docs, schemas, or validation.

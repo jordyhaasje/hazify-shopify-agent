@@ -62,14 +62,16 @@ For Shopify CLI v4, use `shopify auth login` without a store flag, or let `shopi
 
 If browser login opens the wrong browser or fails because an existing browser is already open, copy the URL/code shown by Shopify CLI, finish login manually, then rerun `shopify theme list --store example.myshopify.com`.
 
-Data-agent access uses Shopify CLI store auth by default:
+Data-agent access uses a permanent Shopify OAuth Authorization Code flow by default:
 
 ```bash
 npm run data:connect
 npm run data:verify
 ```
 
-This runs `shopify store auth --store <store> --scopes <scopes>` and verifies access with a read-only `shopify store execute` query. Existing Admin API tokens and local OAuth are advanced fallback routes.
+This guides the user through one browser approval for a Shopify Custom App, stores the resulting offline Admin API token locally, regenerates MCP configs, and verifies access with a read-only Admin GraphQL query. Shopify requires the merchant to approve app installation in the browser once; this cannot be fully headless.
+
+If a team cannot create a Custom App, `npm run data:legacy-store-auth` remains available as a temporary Shopify CLI fallback. Tokens from that route can expire and should not be the normal coding-agent setup.
 
 ## Credential Storage
 
@@ -87,9 +89,11 @@ Claude Code config is written to `.mcp.json`.
 
 OpenCode example config is written to `opencode.json`. If OpenCode changes its MCP format, copy the same server definitions from `configs/opencode/opencode.example.json` into the current OpenCode settings.
 
-The default MCP server is:
+The default documentation/schema MCP server is:
 
 - `npx -y @shopify/dev-mcp@latest`
+
+After `npm run data:connect` stores a valid offline Admin API token, Hazify also adds a local `shopify-admin-api` MCP server to Codex, Claude Code, and OpenCode configs. Tracked example configs use placeholders only; real local configs must never be committed with token values.
 
 The setup objective referenced a public Shopify CLI MCP package, but the listed package is not currently installable from npm. To avoid broken client startup, Hazify uses direct Shopify CLI wrappers by default. If your team has a verified Shopify CLI MCP package, set `HAZIFY_SHOPIFY_CLI_MCP_PACKAGE` before running setup or configure. See `configs/shopify-cli-mcp.md`.
 
@@ -102,6 +106,7 @@ npm run doctor
 npm run configure
 npm run data:connect
 npm run data:verify
+npm run data:legacy-store-auth
 npm run auth:advanced
 npm run theme:list
 npm run theme:pull
@@ -116,7 +121,7 @@ Theme access and data-agent access are different:
 - Theme work uses Shopify CLI and the local `./theme` folder.
 - Product, order, customer, inventory, metaobject, and content operations require data-agent access.
 - Use the launcher option "Enable Shopify data agent access" or run `npm run data:connect`.
-- Shopify CLI can create/link an app and manage app config, but ordinary CLI login alone is not data-agent access. Hazify uses Shopify CLI `store auth` as the default data route.
+- Shopify CLI can create/link an app and manage app config, but ordinary CLI login alone is not data-agent access. Hazify uses a one-time Shopify OAuth install as the default data route.
 
 The built package also exposes:
 
