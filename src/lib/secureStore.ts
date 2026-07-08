@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
+import path from "node:path";
 import fs from "fs-extra";
-import { encryptedCredentialsPath } from "./paths.js";
+import { encryptedCredentialsKeyPath, encryptedCredentialsPath } from "./paths.js";
 import { askHidden } from "./prompts.js";
+import { logger } from "./logger.js";
 
 const SERVICE = "hazify-shopify-agent";
 const ADMIN_API_TOKEN_SUFFIX = "admin-api-token";
@@ -26,16 +28,46 @@ async function loadKeytar(): Promise<KeytarLike | null> {
   try {
     const dynamicImport = new Function("specifier", "return import(specifier)") as (
       specifier: string
-    ) => Promise<KeytarLike>;
-    return await dynamicImport("keytar");
+    ) => Promise<KeytarLike | { default?: KeytarLike }>;
+    const mod = await dynamicImport("keytar");
+    const keytar = "default" in mod && mod.default ? mod.default : mod;
+    if (!keytar || typeof (keytar as KeytarLike).setPassword !== "function") return null;
+    return keytar as KeytarLike;
   } catch {
     return null;
   }
 }
 
+async function readLocalPassphraseFile(): Promise<string | null> {
+  if (!(await fs.pathExists(encryptedCredentialsKeyPath))) return null;
+  return (await fs.readFile(encryptedCredentialsKeyPath, "utf8")).trim() || null;
+}
+
+async function writeLocalPassphraseFile(passphrase: string): Promise<void> {
+  await fs.ensureDir(path.dirname(encryptedCredentialsKeyPath));
+  await fs.writeFile(encryptedCredentialsKeyPath, `${passphrase}\n`, { encoding: "utf8", mode: 0o600 });
+  await fs.chmod(encryptedCredentialsKeyPath, 0o600);
+}
+
 async function getPassphrase({ confirm = false }: { confirm?: boolean } = {}): Promise<string> {
   const envPassphrase = process.env.HAZIFY_CREDENTIAL_PASSPHRASE;
   if (envPassphrase) return envPassphrase;
+  const localPassphrase = await readLocalPassphraseFile();
+  if (localPassphrase) {
+    process.env.HAZIFY_CREDENTIAL_PASSPHRASE = localPassphrase;
+    return localPassphrase;
+  }
+  if (!process.stdin.isTTY) {
+    if (await fs.pathExists(encryptedCredentialsPath)) {
+      throw new Error("Encrypted credentials already exist, but no readable passphrase was found. Set HAZIFY_CREDENTIAL_PASSPHRASE or restore .hazify/credentials.key.");
+    }
+    const generated = crypto.randomBytes(32).toString("base64url");
+    await writeLocalPassphraseFile(generated);
+    process.env.HAZIFY_CREDENTIAL_PASSPHRASE = generated;
+    logger.warn("Running without an interactive terminal. A local encrypted-credential key was generated under .hazify/.");
+    logger.warn("The file is gitignored. Do not share or commit files named .hazify/credentials*.");
+    return generated;
+  }
   const first = await askHidden("Create or enter local credential encryption passphrase:");
   if (!confirm) {
     process.env.HAZIFY_CREDENTIAL_PASSPHRASE = first;
@@ -81,6 +113,7 @@ async function writeEncryptedMap(passphrase: string, values: Record<string, stri
     data: data.toString("base64")
   };
   await fs.writeJson(encryptedCredentialsPath, encrypted, { spaces: 2 });
+  await fs.chmod(encryptedCredentialsPath, 0o600);
 }
 
 export async function storeSecret(account: string, value: string): Promise<"keytar" | "encrypted-file"> {
@@ -129,7 +162,7 @@ export async function readSecret(account: string, { prompt = true }: { prompt?: 
   const keytar = await loadKeytar();
   if (keytar) return keytar.getPassword(SERVICE, account);
   if (!(await fs.pathExists(encryptedCredentialsPath))) return null;
-  if (!prompt && !process.env.HAZIFY_CREDENTIAL_PASSPHRASE) return null;
+  if (!prompt && !process.env.HAZIFY_CREDENTIAL_PASSPHRASE && !(await fs.pathExists(encryptedCredentialsKeyPath))) return null;
   const passphrase = await getPassphrase();
   const values = await readEncryptedMap(passphrase);
   return values[account] ?? null;
@@ -158,12 +191,13 @@ export async function hasSecret(account: string): Promise<boolean> {
   const keytar = await loadKeytar();
   if (keytar) return Boolean(await keytar.getPassword(SERVICE, account));
   if (!(await fs.pathExists(encryptedCredentialsPath))) return false;
-  if (!process.env.HAZIFY_CREDENTIAL_PASSPHRASE) return true;
+  const localPassphrase = process.env.HAZIFY_CREDENTIAL_PASSPHRASE || await readLocalPassphraseFile();
+  if (!localPassphrase) return false;
   try {
-    const values = await readEncryptedMap(process.env.HAZIFY_CREDENTIAL_PASSPHRASE);
+    const values = await readEncryptedMap(localPassphrase);
     return Boolean(values[account]);
   } catch {
-    return true;
+    return false;
   }
 }
 

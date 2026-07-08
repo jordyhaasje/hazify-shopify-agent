@@ -4,11 +4,17 @@ import { normalizeThemeReference } from "./themeWorkspace.js";
 import { CAPABILITY_SCOPES, DEFAULT_CAPABILITIES, type CapabilityName, uniqueScopes } from "./scopes.js";
 import { validateStoreDomain } from "./validation.js";
 
+export function ensureInteractive(action: string): void {
+  if (process.stdin.isTTY) return;
+  throw new Error(`${action} requires an interactive terminal. Run npm run setup:agent with --store, or configure .hazify/config.local.json first.`);
+}
+
 export async function selectAiClients(detected: {
   codexInstalled: boolean;
   claudeInstalled: boolean;
   opencodeInstalled: boolean;
 }): Promise<AiClient[]> {
+  ensureInteractive("Choosing AI clients");
   const choices = [
     { name: `Codex${detected.codexInstalled ? "" : " (CLI not on PATH; config only)"}`, value: "codex" },
     { name: `Claude Code${detected.claudeInstalled ? "" : " (CLI not on PATH; config only)"}`, value: "claude" },
@@ -27,6 +33,7 @@ export async function selectAiClients(detected: {
 }
 
 export async function askStoreDomain(defaultValue?: string): Promise<string> {
+  ensureInteractive("Entering the Shopify store domain");
   const answers = await inquirer.prompt<{ storeDomain: string }>([
     {
       type: "input",
@@ -50,6 +57,7 @@ export async function askStoreDomain(defaultValue?: string): Promise<string> {
 export async function askAuthMode(
   options: { includeThemeOnly?: boolean; includeStoreAuth?: boolean; includeAdvanced?: boolean } = {}
 ): Promise<AuthMode> {
+  ensureInteractive("Choosing the Shopify auth mode");
   const includeThemeOnly = options.includeThemeOnly ?? true;
   const includeStoreAuth = options.includeStoreAuth ?? false;
   const includeAdvanced = options.includeAdvanced ?? false;
@@ -81,6 +89,7 @@ export async function askAuthMode(
 }
 
 export async function askCapabilityScopes(): Promise<string[]> {
+  ensureInteractive("Choosing Shopify access scopes");
   const answers = await inquirer.prompt<{ capabilities: CapabilityName[] }>([
     {
       type: "checkbox",
@@ -94,6 +103,7 @@ export async function askCapabilityScopes(): Promise<string[]> {
 }
 
 export async function askHidden(message: string): Promise<string> {
+  ensureInteractive(message);
   const answers = await inquirer.prompt<{ value: string }>([
     {
       type: "password",
@@ -109,6 +119,7 @@ export async function askHidden(message: string): Promise<string> {
 }
 
 export async function askInput(message: string, defaultValue = ""): Promise<string> {
+  ensureInteractive(message);
   const answers = await inquirer.prompt<{ value: string }>([
     {
       type: "input",
@@ -124,6 +135,7 @@ export async function askInput(message: string, defaultValue = ""): Promise<stri
 }
 
 export async function askConfirm(message: string, defaultValue = true): Promise<boolean> {
+  ensureInteractive(message);
   const answers = await inquirer.prompt<{ value: boolean }>([
     { type: "confirm", name: "value", message, default: defaultValue }
   ]);
@@ -131,6 +143,7 @@ export async function askConfirm(message: string, defaultValue = true): Promise<
 }
 
 export async function askThemeId(rawOutput?: string): Promise<{ id: string; name: string | null }> {
+  ensureInteractive("Choosing a Shopify theme");
   if (rawOutput) {
     console.log("\nShopify CLI theme list output:\n");
     console.log(rawOutput);

@@ -2,6 +2,7 @@ import { claudeMcpPath, codexConfigPath, opencodeConfigPath } from "./paths.js";
 import { readLocalConfig, writeTextFile } from "./filesystem.js";
 import type { AiClient } from "./filesystem.js";
 import { hasAdminApiToken } from "./secureStore.js";
+import { logger } from "./logger.js";
 
 export const SHOPIFY_CLI_MCP_PACKAGE = process.env.HAZIFY_SHOPIFY_CLI_MCP_PACKAGE;
 const ADMIN_API_VERSION = "2026-07";
@@ -126,5 +127,13 @@ export async function writeMcpConfigs(clients: AiClient[]): Promise<void> {
   }
   if (clients.includes("opencode")) {
     await writeTextFile(opencodeConfigPath, opencodeJson(adminApi));
+  }
+
+  logger.info("MCP configs written. Restart or reload your coding agent to load new MCP servers.");
+  if (adminApi) {
+    logger.info("MCP servers configured: shopify-dev-mcp, shopify-admin-api");
+  } else {
+    logger.info("MCP servers configured: shopify-dev-mcp");
+    logger.info("Run npm run data:connect to add shopify-admin-api for store data access.");
   }
 }

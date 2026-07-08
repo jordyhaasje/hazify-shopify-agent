@@ -45,7 +45,7 @@ Always run commands from the repository root, the folder that contains \`package
 4. Use Shopify CLI for theme browser login and theme operations.
 5. Stop before live theme pushes unless the merchant explicitly approves live.
 6. Do not tell the merchant to manually create a Custom App in Shopify Admin. Use the CLI-backed app setup in this repository.
-7. If Shopify CLI asks which organization or app to use, choose or create \`Hazify Shopify Agent\` in the terminal/browser flow.
+7. If Shopify CLI asks which organization or app to use, choose or create \`Hazify Store Assistant\` in the terminal/browser flow.
 
 ## Recommended Agent Flow
 
@@ -71,6 +71,8 @@ npm run data:verify
 \`\`\`
 
 This provisions or links the Shopify app, pulls app credentials through Shopify CLI, creates a one-time Shopify browser approval, stores the resulting offline Admin API token locally, and regenerates MCP configs with \`shopify-admin-api\`. The agent may run the command, but the merchant must approve app installation in the browser once.
+
+After \`npm run data:connect\` succeeds, tell the merchant to restart or reload this coding app so the new \`shopify-admin-api\` MCP server is available.
 
 Do not ask the merchant for a client ID, client secret, access token, or manual Custom App setup steps. The only normal human checkpoint is the Shopify browser approval. Explain that Shopify is asking permission for the local assistant to use the store permissions listed in the browser, then wait for the merchant to approve or cancel.
 

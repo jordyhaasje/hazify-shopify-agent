@@ -17,7 +17,7 @@ async function getAccessToken(): Promise<string> {
   const domain = requireEnv("SHOPIFY_STORE_DOMAIN", storeDomain);
   const token = await readAdminApiToken(domain, { prompt: false });
   if (!token) {
-    throw new Error("SHOPIFY_ADMIN_API_TOKEN is not set and no readable stored Admin API token was found. Run npm run data:connect, or set HAZIFY_CREDENTIAL_PASSPHRASE when using encrypted fallback storage.");
+    throw new Error("No readable stored Admin API token was found. Run npm run data:connect, or set HAZIFY_CREDENTIAL_PASSPHRASE/restore .hazify/credentials.key when using encrypted fallback storage.");
   }
   return token;
 }

@@ -2,7 +2,7 @@ import { Command } from "commander";
 import inquirer from "inquirer";
 import { readLocalConfig, upsertLocalConfig } from "../lib/filesystem.js";
 import { logger } from "../lib/logger.js";
-import { askStoreDomain, askThemeId } from "../lib/prompts.js";
+import { askStoreDomain, askThemeId, ensureInteractive } from "../lib/prompts.js";
 import { themePath } from "../lib/paths.js";
 import { listThemes, pullTheme, runThemeCheck, startThemeDev } from "../lib/themeWorkspace.js";
 
@@ -35,6 +35,7 @@ export function themeCommand(): Command {
       if (!themeId) {
         const listed = await listThemes(storeDomain);
         if (listed.themes.length) {
+          ensureInteractive("Choosing a Shopify theme");
           const answer = await inquirer.prompt<{ theme: { id: string; name: string } }>([
             {
               type: "select",

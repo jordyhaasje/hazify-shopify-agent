@@ -5,7 +5,7 @@ import { authCommand } from "./auth.js";
 import { configureCommand } from "./configure.js";
 import { readLocalConfig, upsertLocalConfig } from "../lib/filesystem.js";
 import { logger } from "../lib/logger.js";
-import { askConfirm, askStoreDomain, askThemeId } from "../lib/prompts.js";
+import { askConfirm, askStoreDomain, askThemeId, ensureInteractive } from "../lib/prompts.js";
 import { themePath } from "../lib/paths.js";
 import { listThemes, pullTheme, runThemeCheck, startThemeDev } from "../lib/themeWorkspace.js";
 import { verifyStoreData } from "../lib/storeData.js";
@@ -38,6 +38,7 @@ async function connectTheme(): Promise<void> {
 
   let selected: { id: string; name: string | null };
   if (themes.themes.length) {
+    ensureInteractive("Choosing a Shopify theme");
     const answer = await inquirer.prompt<{ theme: { id: string; name: string } }>([
       {
         type: "select",
@@ -94,6 +95,7 @@ async function quickStart(): Promise<void> {
 }
 
 export async function launchCommand(): Promise<void> {
+  ensureInteractive("Opening the Hazify launcher");
   logger.title("Hazify Shopify Agent Launcher");
   let running = true;
 

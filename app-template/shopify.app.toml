@@ -1,5 +1,5 @@
 # Template only. `npm run setup` updates scopes and store notes.
-name = "Hazify Shopify Agent"
+name = "Hazify Store Assistant"
 client_id = ""
 application_url = "http://127.0.0.1:3456"
 embedded = false

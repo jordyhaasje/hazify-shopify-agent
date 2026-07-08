@@ -5,7 +5,7 @@ import { ensureWorkspaceDirs, upsertLocalConfig } from "../lib/filesystem.js";
 import { runInteractive } from "../lib/exec.js";
 import { logger } from "../lib/logger.js";
 import { writeMcpConfigs } from "../lib/mcpConfig.js";
-import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
+import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askStoreDomain, askThemeId, ensureInteractive, selectAiClients } from "../lib/prompts.js";
 import { storeAdminApiToken } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
@@ -118,6 +118,7 @@ async function chooseAndPullTheme(storeDomain: string): Promise<{ id: string | n
 
   let selected: { id: string; name: string | null };
   if (choices.length) {
+    ensureInteractive("Choosing a Shopify theme");
     const answer = await inquirer.prompt<{ theme: { id: string; name: string } }>([
       { type: "select", name: "theme", message: "Choose a theme to pull into ./theme:", choices }
     ]);

@@ -14,7 +14,13 @@ export interface ShopifyAppCredentials {
   clientSecret: string;
 }
 
-const APP_NAME = "Hazify Shopify Agent";
+interface ShopifyOrganization {
+  id: string;
+  gid?: string;
+  name: string;
+}
+
+const APP_NAME = "Hazify Store Assistant";
 
 export async function ensureShopifyCliLogin(storeDomain: string): Promise<boolean> {
   const check = await runShopify(["theme", "list", "--store", storeDomain]);
@@ -22,6 +28,46 @@ export async function ensureShopifyCliLogin(storeDomain: string): Promise<boolea
   logger.warn("Shopify CLI could not verify store access yet. The next command may open a browser login flow.");
   const exitCode = await runShopifyInteractive(["theme", "list", "--store", storeDomain]);
   return exitCode === 0;
+}
+
+async function listOrganizations(): Promise<ShopifyOrganization[]> {
+  const result = await runShopify(["organization", "list", "--json"]);
+  if (!result.ok) return [];
+  try {
+    const parsed = JSON.parse(result.stdout) as { organizations?: ShopifyOrganization[] } | ShopifyOrganization[];
+    if (Array.isArray(parsed)) return parsed;
+    return parsed.organizations ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function resolveOrganizationId(): Promise<string | null> {
+  if (process.env.SHOPIFY_ORG_ID) {
+    logger.info(`Using Shopify organization from SHOPIFY_ORG_ID: ${process.env.SHOPIFY_ORG_ID}`);
+    return process.env.SHOPIFY_ORG_ID;
+  }
+
+  const orgs = await listOrganizations();
+  if (orgs.length === 0) {
+    if (!process.stdin.isTTY) {
+      throw new Error("No Shopify organization was detected. Complete Shopify CLI browser login, make sure the account can create apps, then rerun npm run data:connect.");
+    }
+    return null;
+  }
+  if (orgs.length === 1) {
+    logger.info(`Using Shopify organization: ${orgs[0].name} (${orgs[0].id})`);
+    return orgs[0].id;
+  }
+
+  const orgList = orgs.map((org) => `  ${org.name} (${org.id})`).join("\n");
+  if (!process.stdin.isTTY) {
+    throw new Error(`Multiple Shopify organizations were found. Re-run with SHOPIFY_ORG_ID set to the correct organization ID:\n${orgList}`);
+  }
+
+  logger.info("Multiple Shopify organizations found. Shopify CLI will ask which one to use. To skip this prompt, set SHOPIFY_ORG_ID.");
+  logger.muted(orgList);
+  return null;
 }
 
 export async function createOrLinkShopifyApp(storeDomain: string, scopes: string[]): Promise<boolean> {
@@ -37,28 +83,42 @@ export async function createOrLinkShopifyApp(storeDomain: string, scopes: string
 
   const appPath = path.dirname(localAppConfigPath);
   await ensureLocalShopifyAppProject(appPath);
-  await writeShopifyAppConfig(storeDomain, scopes);
+  await flattenAppProject(appPath);
+  await cleanupTemplateArtifacts(appPath);
 
-  const linkExitCode = await runShopifyInteractive(["app", "config", "link", "--path", appPath]);
-  if (linkExitCode !== 0) throw new Error("Shopify app creation/linking did not complete.");
+  const existingClientId = await readLinkedClientId();
+  await writeShopifyAppConfig(storeDomain, scopes, { clientId: existingClientId });
+
+  const linkArgs = ["app", "config", "link", "--path", appPath];
+  if (existingClientId) linkArgs.push("--client-id", existingClientId);
+  const linkExitCode = await runShopifyInteractive(linkArgs);
+  if (linkExitCode !== 0) {
+    const recoveredClientId = await readLinkedClientId();
+    if (!recoveredClientId) throw new Error("Shopify app creation/linking did not complete.");
+    logger.info("App already linked. Continuing with existing client_id.");
+  }
 
   const linkedClientId = await readLinkedClientId();
+  if (!linkedClientId) {
+    throw new Error("Shopify app linking completed without a client_id. Re-run npm run data:connect after selecting or creating the Hazify Store Assistant app.");
+  }
   await writeShopifyAppConfig(storeDomain, scopes, { clientId: linkedClientId });
   await checkAppConfig(appPath);
   const deployed = await deployShopifyAppConfig(appPath, linkedClientId);
   if (!deployed) {
-    logger.warn("Shopify CLI could not apply the app config automatically. Re-run npm run data:connect after checking Shopify CLI login and account permissions.");
+    throw new Error("Shopify CLI could not apply the app config automatically. Re-run npm run data:connect after checking Shopify CLI login and account permissions.");
   }
 
   return true;
 }
 
 async function ensureLocalShopifyAppProject(appPath: string): Promise<void> {
-  if (await fs.pathExists(path.join(appPath, "package.json"))) return;
+  if (await isShopifyAppProject(appPath)) return;
+  if ((await findNestedAppProjects(appPath)).length) return;
 
   await fs.ensureDir(appPath);
-  logger.info("Creating the local Shopify app project with Shopify CLI.");
-  const initExitCode = await runShopifyInteractive([
+  await fs.emptyDir(appPath);
+  const initArgs = [
     "app",
     "init",
     "--name",
@@ -69,10 +129,68 @@ async function ensureLocalShopifyAppProject(appPath: string): Promise<void> {
     appPath,
     "--package-manager",
     "npm"
-  ]);
+  ];
+  const orgId = await resolveOrganizationId();
+  if (orgId) {
+    logger.info("Creating the local Shopify app project with Shopify CLI.");
+    const initResult = await runShopify([...initArgs, "--organization-id", orgId]);
+    if (initResult.ok) return;
+    if (initResult.stderr || initResult.stdout) logger.muted([initResult.stdout, initResult.stderr].filter(Boolean).join("\n"));
+    logger.warn("Non-interactive Shopify app creation failed. Trying interactive fallback.");
+  } else {
+    logger.warn("No Shopify organization was detected. Trying interactive app creation.");
+  }
 
+  const interactiveArgs = orgId ? [...initArgs, "--organization-id", orgId] : initArgs;
+  const initExitCode = await runShopifyInteractive(interactiveArgs);
   if (initExitCode !== 0) {
     logger.warn("Shopify CLI app creation did not finish. Trying the app-link flow next.");
+  }
+}
+
+async function flattenAppProject(appPath: string): Promise<void> {
+  if (await isShopifyAppProject(appPath)) return;
+  const candidates = await findNestedAppProjects(appPath);
+  if (candidates.length === 0) return;
+  if (candidates.length > 1) {
+    throw new Error(`Shopify CLI created multiple app project directories under .hazify/app. Remove .hazify/app and rerun npm run data:connect.`);
+  }
+
+  const nested = candidates[0];
+  const nestedFiles = await fs.readdir(nested);
+  logger.info(`Moving Shopify app project files from ${path.relative(appPath, nested)} into .hazify/app.`);
+  for (const file of nestedFiles) {
+    const src = path.join(nested, file);
+    const dest = path.join(appPath, file);
+    if (await fs.pathExists(dest)) await fs.remove(dest);
+    await fs.move(src, dest, { overwrite: true });
+  }
+  await fs.remove(nested);
+}
+
+async function isShopifyAppProject(projectPath: string): Promise<boolean> {
+  return (await fs.pathExists(path.join(projectPath, "package.json")))
+    && (await fs.pathExists(path.join(projectPath, "shopify.app.toml")));
+}
+
+async function findNestedAppProjects(appPath: string): Promise<string[]> {
+  if (!(await fs.pathExists(appPath))) return [];
+  const entries = await fs.readdir(appPath, { withFileTypes: true });
+  const ignoredDirs = new Set([".git", ".shopify", "node_modules"]);
+  const candidates: string[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || ignoredDirs.has(entry.name)) continue;
+    const candidatePath = path.join(appPath, entry.name);
+    if (await isShopifyAppProject(candidatePath)) candidates.push(candidatePath);
+  }
+  return candidates;
+}
+
+async function cleanupTemplateArtifacts(appPath: string): Promise<void> {
+  const extensionsPath = path.join(appPath, "extensions");
+  if (await fs.pathExists(extensionsPath)) {
+    logger.info("Removing template UI extensions not needed for API access.");
+    await fs.remove(extensionsPath);
   }
 }
 
@@ -89,7 +207,7 @@ export async function writeShopifyAppConfig(
   options: { clientId?: string } = {}
 ): Promise<string> {
   const filePath = localAppConfigPath;
-  const content = `# Local Shopify app config template for Hazify Shopify Agent.
+  const content = `# Local Shopify app config template for Hazify Store Assistant.
 # Shopify CLI login enables CLI operations. Admin API store data requires an app/token auth flow.
 
 name = "${APP_NAME}"
@@ -183,7 +301,10 @@ async function pullShopifyAppEnv(appPath: string): Promise<Record<string, string
   if (clientId) pullArgs.push("--client-id", clientId);
   const pull = await runShopify(pullArgs);
   if (pull.ok && await fs.pathExists(localAppEnvPath)) {
-    return parseShopifyEnv(await fs.readFile(localAppEnvPath, "utf8"));
+    await fs.chmod(localAppEnvPath, 0o600).catch(() => undefined);
+    const values = parseShopifyEnv(await fs.readFile(localAppEnvPath, "utf8"));
+    await fs.remove(localAppEnvPath).catch(() => undefined);
+    return values;
   }
 
   const output = [show.stderr, pull.stderr].filter(Boolean).join("\n");

@@ -17,6 +17,7 @@ async function runPermanentOAuth(storeDomain: string, scopes: string[]): Promise
   logger.success(`Permanent offline Admin API token stored using ${location}.`);
   await writeMcpConfigs(config.configuredClients.length ? config.configuredClients : ["codex", "claude", "opencode"]);
   logger.success("MCP configs updated with Shopify Admin API access.");
+  logger.info("IMPORTANT: Restart or reload your coding agent now to pick up shopify-admin-api.");
   const verified = await verifyStoreData(storeDomain);
   if (verified.ok) logger.success("Shopify data-agent access verified.");
   else logger.warn("OAuth completed, but verification did not succeed yet. Re-run npm run data:verify.");
