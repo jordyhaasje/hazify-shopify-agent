@@ -1,20 +1,18 @@
 import { claudeMcpPath, codexConfigPath, opencodeConfigPath } from "./paths.js";
 import { readLocalConfig, writeTextFile } from "./filesystem.js";
 import type { AiClient } from "./filesystem.js";
-import { readAdminApiToken } from "./secureStore.js";
+import { hasAdminApiToken } from "./secureStore.js";
 
 export const SHOPIFY_CLI_MCP_PACKAGE = process.env.HAZIFY_SHOPIFY_CLI_MCP_PACKAGE;
 const ADMIN_API_VERSION = "2026-07";
 
 interface AdminApiMcpConfig {
   storeDomain: string;
-  token: string;
 }
 
 function adminApiEnv(config: AdminApiMcpConfig): Record<string, string> {
   return {
     SHOPIFY_STORE_DOMAIN: config.storeDomain,
-    SHOPIFY_ADMIN_API_TOKEN: config.token,
     SHOPIFY_ADMIN_API_VERSION: ADMIN_API_VERSION
   };
 }
@@ -116,9 +114,9 @@ export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
 
 export async function writeMcpConfigs(clients: AiClient[]): Promise<void> {
   const config = await readLocalConfig();
-  const token = config?.storeDomain ? await readAdminApiToken(config.storeDomain, { prompt: false }) : null;
-  const adminApi = config?.storeDomain && token
-    ? { storeDomain: config.storeDomain, token }
+  const hasStoredToken = config?.storeDomain ? await hasAdminApiToken(config.storeDomain) : false;
+  const adminApi = config?.storeDomain && (hasStoredToken || process.env.SHOPIFY_ADMIN_API_TOKEN)
+    ? { storeDomain: config.storeDomain }
     : undefined;
 
   if (clients.includes("claude")) {

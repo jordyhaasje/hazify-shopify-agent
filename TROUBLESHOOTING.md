@@ -87,6 +87,8 @@ If your account cannot create a Custom App, run `npm run data:legacy-store-auth`
 
 Some systems cannot build or load the optional native keychain package. In that case the CLI uses an encrypted local file under `.hazify/`. Keep your passphrase safe. The file is gitignored, but anyone with the file and passphrase can decrypt it.
 
+If Codex, Claude Code, or OpenCode starts the Admin API MCP server in a fresh process, the server cannot ask for this passphrase over MCP stdio. Set `HAZIFY_CREDENTIAL_PASSPHRASE` in that client environment, or use OS keychain storage.
+
 ## MCP Server Not Loading
 
 Restart your AI client after setup. Confirm the relevant config exists:

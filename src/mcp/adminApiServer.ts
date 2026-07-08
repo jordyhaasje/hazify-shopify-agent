@@ -2,14 +2,24 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import * as z from "zod/v4";
+import { readAdminApiToken } from "../lib/secureStore.js";
 
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
-const accessToken = process.env.SHOPIFY_ADMIN_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_ADMIN_API_VERSION ?? "2026-07";
 
 function requireEnv(name: string, value: string | undefined): string {
   if (!value) throw new Error(`${name} is required for the Shopify Admin API MCP server.`);
   return value;
+}
+
+async function getAccessToken(): Promise<string> {
+  if (process.env.SHOPIFY_ADMIN_API_TOKEN) return process.env.SHOPIFY_ADMIN_API_TOKEN;
+  const domain = requireEnv("SHOPIFY_STORE_DOMAIN", storeDomain);
+  const token = await readAdminApiToken(domain, { prompt: false });
+  if (!token) {
+    throw new Error("SHOPIFY_ADMIN_API_TOKEN is not set and no readable stored Admin API token was found. Run npm run data:connect, or set HAZIFY_CREDENTIAL_PASSPHRASE when using encrypted fallback storage.");
+  }
+  return token;
 }
 
 function isMutation(query: string): boolean {
@@ -21,11 +31,12 @@ function isMutation(query: string): boolean {
 }
 
 async function callAdminGraphql(query: string, variables: Record<string, unknown> | undefined): Promise<unknown> {
+  const token = await getAccessToken();
   const response = await fetch(`https://${requireEnv("SHOPIFY_STORE_DOMAIN", storeDomain)}/admin/api/${apiVersion}/graphql.json`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-shopify-access-token": requireEnv("SHOPIFY_ADMIN_API_TOKEN", accessToken)
+      "x-shopify-access-token": token
     },
     body: JSON.stringify({ query, variables: variables ?? {} })
   });
@@ -69,7 +80,7 @@ server.registerTool(
 
 async function main(): Promise<void> {
   requireEnv("SHOPIFY_STORE_DOMAIN", storeDomain);
-  requireEnv("SHOPIFY_ADMIN_API_TOKEN", accessToken);
+  await getAccessToken();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Hazify Shopify Admin API MCP server running on stdio.");

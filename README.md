@@ -71,13 +71,15 @@ npm run data:verify
 
 This guides the user through one browser approval for a Shopify Custom App, stores the resulting offline Admin API token locally, regenerates MCP configs, and verifies access with a read-only Admin GraphQL query. Shopify requires the merchant to approve app installation in the browser once; this cannot be fully headless.
 
+MCP configs never write the raw token. The local `shopify-admin-api` MCP server reads it from secure storage, or from `SHOPIFY_ADMIN_API_TOKEN` if your team explicitly provides that environment variable.
+
 If a team cannot create a Custom App, `npm run data:legacy-store-auth` remains available as a temporary Shopify CLI fallback. Tokens from that route can expire and should not be the normal coding-agent setup.
 
 ## Credential Storage
 
 Secrets are collected only through hidden terminal prompts. The repo never asks you to paste tokens into chat.
 
-Credentials are stored in the OS credential store through optional `keytar` when available. If that is unavailable, an encrypted local file is written under `.hazify/`. The encrypted fallback requires a passphrase and is gitignored.
+Credentials are stored in the OS credential store through optional `keytar` when available. If that is unavailable, an encrypted local file is written under `.hazify/`. The encrypted fallback requires a passphrase and is gitignored. If an AI client starts the MCP server in a fresh process while using encrypted fallback storage, set `HAZIFY_CREDENTIAL_PASSPHRASE` in that client environment so the server can read the token without prompting.
 
 Never commit `.env`, `.hazify/config.local.json`, `.hazify/credentials*`, or `.hazify/tokens*`.
 
