@@ -23,14 +23,14 @@ program
   .option("--agent", "Generate agent-ready configs and setup guide without interactive prompts.")
   .option("--clients <clients>", "Comma-separated clients: codex,claude,opencode, or all.", "all")
   .option("--store <store>", "Shopify store domain, for example example.myshopify.com.")
-  .option("--auth-mode <mode>", "Auth mode: shopify-store-auth, shopify-cli-oauth, admin-api-token, or theme-only.")
+  .option("--auth-mode <mode>", "Auth mode: shopify-oauth-offline, admin-api-token, shopify-store-auth, or theme-only.")
   .action(setupCommand);
 program.command("doctor").description("Check local workspace health.").action(doctorCommand);
 program
   .command("auth")
   .description("Configure or refresh Admin API authentication.")
   .option("--data-agent", "Configure Admin API access for Shopify data-agent features.")
-  .option("--advanced", "Use advanced token/OAuth auth modes instead of Shopify CLI store auth.")
+  .option("--advanced", "Choose a non-default auth mode instead of the permanent OAuth flow.")
   .action(authCommand);
 program.command("configure").description("Regenerate local agent and MCP configuration.").action(configureCommand);
 program.addCommand(themeCommand());

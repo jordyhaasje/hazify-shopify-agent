@@ -1,11 +1,26 @@
 import { claudeMcpPath, codexConfigPath, opencodeConfigPath } from "./paths.js";
-import { writeTextFile } from "./filesystem.js";
+import { readLocalConfig, writeTextFile } from "./filesystem.js";
 import type { AiClient } from "./filesystem.js";
+import { readAdminApiToken } from "./secureStore.js";
 
 export const SHOPIFY_CLI_MCP_PACKAGE = process.env.HAZIFY_SHOPIFY_CLI_MCP_PACKAGE;
+const ADMIN_API_VERSION = "2026-07";
 
-function mcpServersJson(): Record<string, { command: string; args: string[] }> {
-  const servers: Record<string, { command: string; args: string[] }> = {
+interface AdminApiMcpConfig {
+  storeDomain: string;
+  token: string;
+}
+
+function adminApiEnv(config: AdminApiMcpConfig): Record<string, string> {
+  return {
+    SHOPIFY_STORE_DOMAIN: config.storeDomain,
+    SHOPIFY_ADMIN_API_TOKEN: config.token,
+    SHOPIFY_ADMIN_API_VERSION: ADMIN_API_VERSION
+  };
+}
+
+function mcpServersJson(adminApi?: AdminApiMcpConfig): Record<string, { command: string; args: string[]; env?: Record<string, string> }> {
+  const servers: Record<string, { command: string; args: string[]; env?: Record<string, string> }> = {
     "shopify-dev-mcp": {
       command: "npx",
       args: ["-y", "@shopify/dev-mcp@latest"]
@@ -17,34 +32,56 @@ function mcpServersJson(): Record<string, { command: string; args: string[] }> {
       args: ["-y", SHOPIFY_CLI_MCP_PACKAGE]
     };
   }
+  if (adminApi) {
+    servers["shopify-admin-api"] = {
+      command: "npm",
+      args: ["run", "mcp:admin", "--silent"],
+      env: adminApiEnv(adminApi)
+    };
+  }
   return servers;
 }
 
-export function claudeMcpJson(): string {
+export function claudeMcpJson(adminApi?: AdminApiMcpConfig): string {
   return JSON.stringify(
     {
-      mcpServers: mcpServersJson()
+      mcpServers: mcpServersJson(adminApi)
     },
     null,
     2
   );
 }
 
-export function codexToml(): string {
-  const base = `[mcp_servers.shopify-dev-mcp]
+function tomlEnv(env: Record<string, string>): string {
+  const entries = Object.entries(env).map(([key, value]) => `${key} = ${JSON.stringify(value)}`);
+  return `{ ${entries.join(", ")} }`;
+}
+
+export function codexToml(adminApi?: AdminApiMcpConfig): string {
+  let config = `[mcp_servers.shopify-dev-mcp]
 command = "npx"
 args = ["-y", "@shopify/dev-mcp@latest"]
 `;
-  if (!SHOPIFY_CLI_MCP_PACKAGE) return base;
-  return `${base}
+  if (SHOPIFY_CLI_MCP_PACKAGE) {
+    config += `
 [mcp_servers.shopify-cli]
 command = "npx"
 args = ["-y", "${SHOPIFY_CLI_MCP_PACKAGE}"]
 `;
+  }
+  if (adminApi) {
+    config += `
+[mcp_servers.shopify-admin-api]
+command = "npm"
+args = ["run", "mcp:admin", "--silent"]
+env = ${tomlEnv(adminApiEnv(adminApi))}
+`;
+  }
+  return config;
 }
 
-export function opencodeJson(): string {
-  const mcp: Record<string, { type: string; command: string[]; enabled: boolean }> = {
+export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
+  const mcp: Record<string, { type: string; command: string[]; enabled: boolean; environment?: Record<string, string> }> = {
     "shopify-dev-mcp": {
       type: "local",
       command: ["npx", "-y", "@shopify/dev-mcp@latest"],
@@ -56,6 +93,14 @@ export function opencodeJson(): string {
       type: "local",
       command: ["npx", "-y", SHOPIFY_CLI_MCP_PACKAGE],
       enabled: true
+    };
+  }
+  if (adminApi) {
+    mcp["shopify-admin-api"] = {
+      type: "local",
+      command: ["npm", "run", "mcp:admin", "--silent"],
+      enabled: true,
+      environment: adminApiEnv(adminApi)
     };
   }
   return JSON.stringify(
@@ -70,13 +115,19 @@ export function opencodeJson(): string {
 }
 
 export async function writeMcpConfigs(clients: AiClient[]): Promise<void> {
+  const config = await readLocalConfig();
+  const token = config?.storeDomain ? await readAdminApiToken(config.storeDomain, { prompt: false }) : null;
+  const adminApi = config?.storeDomain && token
+    ? { storeDomain: config.storeDomain, token }
+    : undefined;
+
   if (clients.includes("claude")) {
-    await writeTextFile(claudeMcpPath, claudeMcpJson());
+    await writeTextFile(claudeMcpPath, claudeMcpJson(adminApi));
   }
   if (clients.includes("codex")) {
-    await writeTextFile(codexConfigPath, codexToml());
+    await writeTextFile(codexConfigPath, codexToml(adminApi));
   }
   if (clients.includes("opencode")) {
-    await writeTextFile(opencodeConfigPath, opencodeJson());
+    await writeTextFile(opencodeConfigPath, opencodeJson(adminApi));
   }
 }

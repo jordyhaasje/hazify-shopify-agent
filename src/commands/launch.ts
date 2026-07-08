@@ -133,7 +133,7 @@ export async function launchCommand(): Promise<void> {
         break;
       case "data-agent":
         logger.info("Theme CLI access is already enough for theme work. Products, orders, customers, inventory, content, metaobjects, and order support require Shopify data-agent access.");
-        logger.info("Hazify uses Shopify CLI store auth by default. App/OAuth token setup is advanced.");
+        logger.info("Hazify uses a one-time Shopify OAuth browser approval and then stores a permanent offline token locally.");
         await authCommand({ dataAgent: true });
         break;
       case "data-verify": {

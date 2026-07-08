@@ -5,8 +5,8 @@ import { ensureWorkspaceDirs, upsertLocalConfig } from "../lib/filesystem.js";
 import { runInteractive } from "../lib/exec.js";
 import { logger } from "../lib/logger.js";
 import { writeMcpConfigs } from "../lib/mcpConfig.js";
-import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
-import { storeSecret } from "../lib/secureStore.js";
+import { askAuthMode, askCapabilityScopes, askConfirm, askHidden, askInput, askStoreDomain, askThemeId, selectAiClients } from "../lib/prompts.js";
+import { storeAdminApiToken } from "../lib/secureStore.js";
 import { isShopifyCliInstalled } from "../lib/shopifyCli.js";
 import { installShopifyCliGlobal } from "../lib/packageManager.js";
 import { SCOPE_GROUPS } from "../lib/scopes.js";
@@ -16,7 +16,7 @@ import { runLocalOAuth } from "../lib/oauth.js";
 import { themePath } from "../lib/paths.js";
 import { writeAgentSetupGuide } from "../lib/agentSetup.js";
 import type { AiClient, AuthMode } from "../lib/filesystem.js";
-import { authenticateStoreData, verifyStoreData } from "../lib/storeData.js";
+import { legacyAuthenticateStoreData, verifyStoreData } from "../lib/storeData.js";
 
 interface SetupOptions {
   agent?: boolean;
@@ -36,7 +36,7 @@ function parseClients(value?: string): AiClient[] {
 
 function parseAuthMode(value?: AuthMode): AuthMode {
   if (!value) return "theme-only";
-  if (["shopify-store-auth", "shopify-cli-oauth", "admin-api-token", "theme-only"].includes(value)) return value;
+  if (["shopify-oauth-offline", "shopify-store-auth", "shopify-cli-oauth", "admin-api-token", "theme-only"].includes(value)) return value;
   throw new Error(`Unsupported auth mode: ${value}`);
 }
 
@@ -71,35 +71,33 @@ async function configureAuth(storeDomain: string, scopes: string[]): Promise<Aut
   }
 
   if (authMode === "shopify-store-auth") {
-    logger.info("Shopify CLI store auth will request Admin API scopes and store CLI auth for store commands.");
-    const exitCode = await authenticateStoreData(storeDomain, scopes);
+    logger.warn("Using legacy Shopify CLI store auth fallback. Tokens from this route can expire.");
+    const exitCode = await legacyAuthenticateStoreData(storeDomain, scopes);
     if (exitCode !== 0) throw new Error("Shopify store auth did not complete.");
-    const verified = await verifyStoreData(storeDomain);
-    if (verified.ok) logger.success("Shopify data-agent access verified with store execute.");
-    else logger.warn("Store auth completed, but verification query did not succeed yet. Re-run doctor after browser approval.");
     return authMode;
   }
 
   if (authMode === "admin-api-token") {
     const token = await askHidden("Paste Admin API access token (hidden):");
-    const storage = await storeSecret(`${storeDomain}:admin-api-token`, token);
+    const storage = await storeAdminApiToken(storeDomain, token);
     logger.success(`Admin API token stored using ${storage}.`);
     return authMode;
   }
 
   await writeShopifyAppConfig(storeDomain, scopes);
   await checkAppConfig();
-  const linked = await createOrLinkShopifyApp();
+  const linked = await createOrLinkShopifyApp(storeDomain, scopes);
   if (!linked) logger.warn(explainManualFallback(storeDomain, scopes));
 
-  if (await askConfirm("Do you have a Shopify app client ID and secret ready for local OAuth?", false)) {
-    const clientId = await askHidden("Shopify app client ID:");
+  if (authMode === "shopify-oauth-offline" || authMode === "shopify-cli-oauth") {
+    const clientId = await askInput("Shopify app client ID:");
     const clientSecret = await askHidden("Shopify app client secret (hidden):");
     const token = await runLocalOAuth({ storeDomain, clientId, clientSecret, scopes });
-    const storage = await storeSecret(`${storeDomain}:admin-api-token`, token.accessToken);
-    logger.success(`OAuth completed and Admin API token stored using ${storage}.`);
-  } else {
-    logger.warn("Skipping OAuth token storage for now. Run npm run auth:advanced when app credentials are ready.");
+    const storage = await storeAdminApiToken(storeDomain, token.accessToken);
+    logger.success(`Permanent offline Admin API token stored using ${storage}.`);
+    const verified = await verifyStoreData(storeDomain);
+    if (verified.ok) logger.success("Shopify data-agent access verified.");
+    else logger.warn("OAuth completed, but verification did not succeed yet. Re-run npm run data:verify.");
   }
   return authMode;
 }
@@ -202,6 +200,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<void> {
       authMode,
       scopes
     });
+    await writeMcpConfigs(clients);
   } else {
     await upsertLocalConfig({
       storeDomain,
@@ -212,6 +211,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<void> {
       authMode,
       scopes
     });
+    await writeMcpConfigs(clients);
   }
 
   logger.title("Setup Complete");

@@ -4,6 +4,7 @@ import { encryptedCredentialsPath } from "./paths.js";
 import { askHidden } from "./prompts.js";
 
 const SERVICE = "hazify-shopify-agent";
+const ADMIN_API_TOKEN_SUFFIX = "admin-api-token";
 
 interface KeytarLike {
   getPassword(service: string, account: string): Promise<string | null>;
@@ -34,11 +35,15 @@ async function getPassphrase({ confirm = false }: { confirm?: boolean } = {}): P
   const envPassphrase = process.env.HAZIFY_CREDENTIAL_PASSPHRASE;
   if (envPassphrase) return envPassphrase;
   const first = await askHidden("Create or enter local credential encryption passphrase:");
-  if (!confirm) return first;
+  if (!confirm) {
+    process.env.HAZIFY_CREDENTIAL_PASSPHRASE = first;
+    return first;
+  }
   const second = await askHidden("Confirm local credential encryption passphrase:");
   if (first !== second) {
     throw new Error("Credential passphrases did not match.");
   }
+  process.env.HAZIFY_CREDENTIAL_PASSPHRASE = first;
   return first;
 }
 
@@ -90,6 +95,17 @@ export async function storeSecret(account: string, value: string): Promise<"keyt
   return "encrypted-file";
 }
 
+export function adminApiTokenAccount(storeDomain: string): string {
+  return `${storeDomain}:${ADMIN_API_TOKEN_SUFFIX}`;
+}
+
+export async function storeAdminApiToken(
+  storeDomain: string,
+  token: string
+): Promise<"keytar" | "encrypted-file"> {
+  return storeSecret(adminApiTokenAccount(storeDomain), token);
+}
+
 export async function readSecret(account: string, { prompt = true }: { prompt?: boolean } = {}): Promise<string | null> {
   const keytar = await loadKeytar();
   if (keytar) return keytar.getPassword(SERVICE, account);
@@ -98,6 +114,13 @@ export async function readSecret(account: string, { prompt = true }: { prompt?: 
   const passphrase = await getPassphrase();
   const values = await readEncryptedMap(passphrase);
   return values[account] ?? null;
+}
+
+export async function readAdminApiToken(
+  storeDomain: string,
+  options: { prompt?: boolean } = {}
+): Promise<string | null> {
+  return readSecret(adminApiTokenAccount(storeDomain), options);
 }
 
 export async function hasSecret(account: string): Promise<boolean> {
@@ -111,4 +134,8 @@ export async function hasSecret(account: string): Promise<boolean> {
   } catch {
     return true;
   }
+}
+
+export async function hasAdminApiToken(storeDomain: string): Promise<boolean> {
+  return hasSecret(adminApiTokenAccount(storeDomain));
 }

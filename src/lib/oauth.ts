@@ -7,13 +7,15 @@ export interface OAuthOptions {
   clientId: string;
   clientSecret: string;
   scopes: string[];
-  preferredPort?: number;
 }
 
 export interface OAuthTokenResponse {
   accessToken: string;
   scope: string;
 }
+
+export const OAUTH_CALLBACK_PORT = 3456;
+export const OAUTH_CALLBACK_URL = `http://127.0.0.1:${OAUTH_CALLBACK_PORT}/callback`;
 
 function safeEqual(a: string, b: string): boolean {
   const left = Buffer.from(a);
@@ -70,13 +72,14 @@ export async function runLocalOAuth(options: OAuthOptions): Promise<OAuthTokenRe
   });
 
   await new Promise<void>((resolve, reject) => {
-    const preferred = options.preferredPort ?? 3456;
-    server.once("error", () => {
-      server.removeAllListeners("error");
-      server.listen(0, "127.0.0.1", resolve);
-      server.once("error", reject);
+    server.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE") {
+        reject(new Error(`OAuth callback port ${OAUTH_CALLBACK_PORT} is already in use. Stop the other process and rerun npm run data:connect.`));
+        return;
+      }
+      reject(error);
     });
-    server.listen(preferred, "127.0.0.1", resolve);
+    server.listen(OAUTH_CALLBACK_PORT, "127.0.0.1", resolve);
   });
 
   const address = server.address();
@@ -85,35 +88,36 @@ export async function runLocalOAuth(options: OAuthOptions): Promise<OAuthTokenRe
     throw new Error("Could not determine OAuth callback port.");
   }
 
-  const redirectUri = `http://127.0.0.1:${address.port}/callback`;
   const installUrl = new URL(`https://${options.storeDomain}/admin/oauth/authorize`);
   installUrl.searchParams.set("client_id", options.clientId);
   installUrl.searchParams.set("scope", options.scopes.join(","));
-  installUrl.searchParams.set("redirect_uri", redirectUri);
+  installUrl.searchParams.set("redirect_uri", OAUTH_CALLBACK_URL);
   installUrl.searchParams.set("state", state);
+  // Omit grant_options[]=per-user so Shopify returns an offline token for the store.
 
+  // This browser step is intentionally not headless: Shopify requires the merchant
+  // to approve app installation once. The stored offline token is reused after that.
   await open(installUrl.toString());
-  const callback = await callbackPromise.catch((error) => {
+  try {
+    const callback = await callbackPromise;
+    const tokenResponse = await fetch(`https://${options.storeDomain}/admin/oauth/access_token`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_id: options.clientId,
+        client_secret: options.clientSecret,
+        code: callback.code
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Shopify OAuth token exchange failed: HTTP ${tokenResponse.status}`);
+    }
+
+    const body = (await tokenResponse.json()) as { access_token?: string; scope?: string };
+    if (!body.access_token) throw new Error("Shopify OAuth token response did not include an access token.");
+    return { accessToken: body.access_token, scope: body.scope ?? "" };
+  } finally {
     server.close();
-    throw error;
-  });
-
-  const tokenResponse = await fetch(`https://${options.storeDomain}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      client_id: options.clientId,
-      client_secret: options.clientSecret,
-      code: callback.code
-    })
-  });
-  server.close();
-
-  if (!tokenResponse.ok) {
-    throw new Error(`Shopify OAuth token exchange failed: HTTP ${tokenResponse.status}`);
   }
-
-  const body = (await tokenResponse.json()) as { access_token?: string; scope?: string };
-  if (!body.access_token) throw new Error("Shopify OAuth token response did not include an access token.");
-  return { accessToken: body.access_token, scope: body.scope ?? "" };
 }

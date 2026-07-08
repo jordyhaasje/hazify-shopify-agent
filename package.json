@@ -19,13 +19,16 @@
     "auth": "tsx src/cli.ts auth",
     "auth:advanced": "tsx src/cli.ts auth --advanced",
     "data:connect": "tsx src/cli.ts auth --data-agent",
+    "data:legacy-store-auth": "tsx src/cli.ts data legacy-store-auth",
     "data:verify": "tsx src/cli.ts data verify",
+    "mcp:admin": "tsx src/mcp/adminApiServer.ts",
     "theme:list": "tsx src/cli.ts theme list",
     "theme:pull": "tsx src/cli.ts theme pull",
     "theme:check": "tsx src/cli.ts theme check",
     "theme:dev": "tsx src/cli.ts theme dev"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "chalk": "latest",
     "commander": "latest",
     "execa": "latest",

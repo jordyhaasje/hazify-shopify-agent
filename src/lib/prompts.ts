@@ -51,11 +51,12 @@ export async function askAuthMode(options: { includeThemeOnly?: boolean; include
   const includeThemeOnly = options.includeThemeOnly ?? true;
   const includeStoreAuth = options.includeStoreAuth ?? true;
   const choices = [
+    { name: "One-time Shopify OAuth install (recommended permanent data agent)", value: "shopify-oauth-offline" },
     { name: "Existing Admin API access token", value: "admin-api-token" },
-    { name: "Advanced: Shopify app / local OAuth", value: "shopify-cli-oauth" }
+    { name: "Advanced: legacy local OAuth", value: "shopify-cli-oauth" }
   ];
   if (includeStoreAuth) {
-    choices.unshift({ name: "Shopify CLI store auth (recommended for coding agents)", value: "shopify-store-auth" });
+    choices.push({ name: "Legacy: Shopify CLI store auth (temporary token fallback)", value: "shopify-store-auth" });
   }
   if (includeThemeOnly) {
     choices.push({ name: "Theme-only mode", value: "theme-only" });
@@ -92,6 +93,21 @@ export async function askHidden(message: string): Promise<string> {
       name: "value",
       message,
       mask: "*",
+      validate(value: string) {
+        return value.trim().length > 0 || "This value is required.";
+      }
+    }
+  ]);
+  return answers.value.trim();
+}
+
+export async function askInput(message: string, defaultValue = ""): Promise<string> {
+  const answers = await inquirer.prompt<{ value: string }>([
+    {
+      type: "input",
+      name: "value",
+      message,
+      default: defaultValue,
       validate(value: string) {
         return value.trim().length > 0 || "This value is required.";
       }

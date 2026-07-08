@@ -4,6 +4,7 @@ import { runShopify, runShopifyInteractive } from "./shopifyCli.js";
 import { fromRoot } from "./filesystem.js";
 import { logger } from "./logger.js";
 import { localAppConfigPath } from "./paths.js";
+import { OAUTH_CALLBACK_URL } from "./oauth.js";
 
 export async function ensureShopifyCliLogin(storeDomain: string): Promise<boolean> {
   const check = await runShopify(["theme", "list", "--store", storeDomain]);
@@ -13,10 +14,15 @@ export async function ensureShopifyCliLogin(storeDomain: string): Promise<boolea
   return exitCode === 0;
 }
 
-export async function createOrLinkShopifyApp(): Promise<boolean> {
-  logger.info("Shopify app creation/linking depends on your Partner account and installed Shopify CLI version.");
-  logger.info("If your CLI supports it, run app linking from the app-template directory after setup.");
-  return false;
+export async function createOrLinkShopifyApp(storeDomain: string, scopes: string[]): Promise<boolean> {
+  logger.step("One-time Shopify Custom App setup");
+  logger.info("Create or open your app in the Shopify Dev Dashboard.");
+  logger.info(`Set the app URL to: http://127.0.0.1:3456`);
+  logger.info(`Add this redirect URL: ${OAUTH_CALLBACK_URL}`);
+  logger.info(`Configure these Admin API scopes: ${scopes.join(", ")}`);
+  logger.info(`Install the app on ${storeDomain}, then return here to approve the OAuth browser prompt.`);
+  logger.warn("Shopify requires merchant approval in the browser once. A coding agent cannot complete that approval headlessly.");
+  return true;
 }
 
 export async function writeShopifyAppConfig(storeDomain: string, scopes: string[]): Promise<string> {
@@ -34,7 +40,7 @@ scopes = "${scopes.join(",")}"
 
 [auth]
 redirect_urls = [
-  "http://127.0.0.1:3456/callback"
+  "${OAUTH_CALLBACK_URL}"
 ]
 
 [webhooks]
@@ -59,13 +65,14 @@ export async function checkAppConfig(appPath = fromRoot(".hazify", "app")): Prom
 }
 
 export function explainManualFallback(storeDomain: string, scopes: string[]): string {
-  return `Automatic app provisioning may require Shopify Partner permissions or CLI commands that vary by account.
+  return `Shopify Custom App setup is the primary data-agent auth route.
 
-Manual fallback:
-1. Run: shopify app init
-2. Link or create an app in your Shopify Partner account.
-3. Configure these scopes: ${scopes.join(",")}
-4. Set this redirect URL: http://127.0.0.1:3456/callback
-5. Install the app on ${storeDomain}, or run: npm run auth:advanced
-6. If OAuth cannot complete, choose "Existing Admin API access token" and paste the token only into the hidden terminal prompt.`;
+One-time browser setup:
+1. Create or open a Custom App in the Shopify Dev Dashboard.
+2. Configure these Admin API scopes: ${scopes.join(",")}
+3. Set this redirect URL: ${OAUTH_CALLBACK_URL}
+4. Install the app on ${storeDomain}.
+5. Run: npm run data:connect
+
+Legacy fallback: if you cannot create a Custom App, run npm run data:legacy-store-auth.`;
 }
