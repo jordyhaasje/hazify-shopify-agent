@@ -1,4 +1,4 @@
-import { claudeMcpPath, codexConfigPath, opencodeConfigPath } from "./paths.js";
+import { claudeMcpPath, codexConfigPath, opencodeConfigPath, repoRoot } from "./paths.js";
 import { readLocalConfig, writeTextFile } from "./filesystem.js";
 import type { AiClient } from "./filesystem.js";
 import { hasAdminApiToken } from "./secureStore.js";
@@ -79,11 +79,21 @@ env = ${tomlEnv(adminApiEnv(adminApi))}
   return config;
 }
 
+interface OpenCodeLocalMcpServer {
+  type: "local";
+  command: string[];
+  enabled: boolean;
+  cwd?: string;
+  environment?: Record<string, string>;
+  timeout?: number;
+}
+
 export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
-  const mcp: Record<string, { type: string; command: string[]; enabled: boolean; environment?: Record<string, string> }> = {
+  const mcp: Record<string, OpenCodeLocalMcpServer> = {
     "shopify-dev-mcp": {
       type: "local",
       command: ["npx", "-y", "@shopify/dev-mcp@latest"],
+      cwd: repoRoot,
       enabled: true
     }
   };
@@ -91,6 +101,7 @@ export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
     mcp["shopify-cli"] = {
       type: "local",
       command: ["npx", "-y", SHOPIFY_CLI_MCP_PACKAGE],
+      cwd: repoRoot,
       enabled: true
     };
   }
@@ -98,8 +109,10 @@ export function opencodeJson(adminApi?: AdminApiMcpConfig): string {
     mcp["shopify-admin-api"] = {
       type: "local",
       command: ["npm", "run", "mcp:admin", "--silent"],
+      cwd: repoRoot,
       enabled: true,
-      environment: adminApiEnv(adminApi)
+      environment: adminApiEnv(adminApi),
+      timeout: 30000
     };
   }
   return JSON.stringify(

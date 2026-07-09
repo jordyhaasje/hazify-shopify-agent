@@ -71,7 +71,7 @@ npx -y @shopify/dev-mcp@latest
 
 After data access is verified, Hazify adds the local `shopify-admin-api` MCP server. Config files do not need raw token values; the server reads the token from secure local storage.
 
-Restart or reload the coding app after `npm run configure` or `npm run data:connect`; MCP servers are loaded when the client starts. For OpenCode, `opencode mcp list` can be used to inspect loaded MCP servers after restart.
+Restart or reload the coding app after `npm run configure` or `npm run data:connect`; MCP servers are loaded when the client starts. For OpenCode, start/reopen it from the repository root and run `opencode mcp list` after restart if the CLI is available. The `shopify-admin-api` MCP server is expected only after `npm run data:connect` has stored a readable Admin API token.
 
 No currently tested Shopify CLI MCP package is installable from npm. Hazify therefore keeps direct Shopify CLI wrappers as the default. See `configs/shopify-cli-mcp.md` for the optional package hook.
 
@@ -81,7 +81,7 @@ Codex reads `AGENTS.md` and project MCP config from `.codex/config.toml`.
 
 Claude Code reads `CLAUDE.md`; this repository keeps `CLAUDE.md` as a tiny import of `AGENTS.md` so Claude, Codex, and OpenCode share one source of rules. Claude Code reads project MCP servers from `.mcp.json`.
 
-OpenCode reads `AGENTS.md` automatically. OpenCode MCP servers are defined in the `mcp` section of `opencode.json`.
+OpenCode reads `AGENTS.md` automatically. OpenCode MCP servers are defined in the `mcp` section of `opencode.json`; local servers include `cwd` so they start from this repository.
 
 When secure OS storage is unavailable and the setup is running without an interactive terminal, Hazify creates `.hazify/credentials.enc.json` and `.hazify/credentials.key`. Both are gitignored and machine-local; treat `.hazify/credentials*` as sensitive local credential material.
 

@@ -37,6 +37,7 @@ export async function doctorCommand(): Promise<void> {
   check(await fs.pathExists(codexConfigPath), "Codex config exists", "Codex config missing.");
   check(await fs.pathExists(claudeMcpPath), "Claude MCP config exists", "Claude MCP config missing.");
   check(await fs.pathExists(opencodeConfigPath), "OpenCode MCP config exists", "OpenCode MCP config missing.");
+  await checkOpenCodeMcpConfig(Boolean(config?.storeDomain && config.authMode !== "theme-only"));
 
   if (config?.storeDomain && shopifyInstalled) {
     const themeInfo = await runShopify(["theme", "info", "--store", config.storeDomain]);
@@ -60,6 +61,26 @@ export async function doctorCommand(): Promise<void> {
   if (shopifyInstalled && (await fs.pathExists(themePath))) {
     const themeCheck = await runShopify(["theme", "check", "--path", themePath]);
     check(themeCheck.ok, "Theme Check command works", "Theme Check did not complete. It may need a pulled theme or updated Shopify CLI.");
+  }
+}
+
+async function checkOpenCodeMcpConfig(expectAdminApi: boolean): Promise<void> {
+  if (!(await fs.pathExists(opencodeConfigPath))) return;
+  try {
+    const config = await fs.readJson(opencodeConfigPath) as {
+      mcp?: Record<string, { cwd?: string; command?: string[]; enabled?: boolean }>;
+    };
+    const servers = config.mcp ?? {};
+    check(Boolean(servers["shopify-dev-mcp"]), "OpenCode Shopify Dev MCP configured", "OpenCode Shopify Dev MCP missing from opencode.json.");
+    if (!expectAdminApi) return;
+
+    const admin = servers["shopify-admin-api"];
+    check(Boolean(admin), "OpenCode Shopify Admin API MCP configured", "OpenCode Shopify Admin API MCP missing. Run: npm run data:connect");
+    if (admin) {
+      check(Boolean(admin.cwd), "OpenCode Shopify Admin API MCP has cwd", "OpenCode Shopify Admin API MCP missing cwd; rerun npm run configure.");
+    }
+  } catch {
+    logger.warn("OpenCode config is not valid JSON. Rerun: npm run configure");
   }
 }
 

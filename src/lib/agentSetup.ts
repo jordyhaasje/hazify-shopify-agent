@@ -72,7 +72,7 @@ npm run data:verify
 
 This provisions or links the Shopify app, pulls app credentials through Shopify CLI, creates a one-time Shopify browser approval, stores the resulting offline Admin API token locally, and regenerates MCP configs with \`shopify-admin-api\`. The agent may run the command, but the merchant must approve app installation in the browser once.
 
-After \`npm run data:connect\` succeeds, tell the merchant to restart or reload this coding app so the new \`shopify-admin-api\` MCP server is available.
+After \`npm run data:connect\` succeeds, tell the merchant to restart or reload this coding app so the new \`shopify-admin-api\` MCP server is available. In OpenCode, run \`opencode mcp list\` after restart if the CLI is available.
 
 Do not ask the merchant for a client ID, client secret, access token, or manual Custom App setup steps. The only normal human checkpoint is the Shopify browser approval. Explain that Shopify is asking permission for the local assistant to use the store permissions listed in the browser, then wait for the merchant to approve or cancel.
 
@@ -80,7 +80,7 @@ For Shopify CLI browser login, run \`shopify auth login\` without a store flag, 
 
 If a browser is already open and the Shopify login flow fails to launch cleanly, copy the login URL or code from the terminal, finish the login in any browser, return to the coding client, and rerun \`shopify theme list --store ${store}\`. The agent should wait for human confirmation before continuing.
 
-If the client is OpenCode, ensure \`opencode.json\` is loaded from the project root. OpenCode supports project config through \`opencode.json\` and MCP servers through the \`mcp\` option.
+If the client is OpenCode, ensure \`opencode.json\` is loaded from the project root. OpenCode supports project config through \`opencode.json\` and MCP servers through the \`mcp\` option. Hazify writes a \`cwd\` for local OpenCode MCP servers so they start from this repo.
 
 ## Human-Friendly Setup
 

@@ -8,6 +8,7 @@
         "-y",
         "@shopify/dev-mcp@latest"
       ],
+      "cwd": ".",
       "enabled": true
     }
   }
